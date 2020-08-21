@@ -33,6 +33,9 @@ import cotterpin.Blueprint.Child;
 import cotterpin.Blueprint.IntoMap;
 import cotterpin.Blueprint.Mutator;
 
+/**
+ * Entry point.
+ */
 public class Cotterpin {
 
     private static class BlueprintImpl<T, S extends BlueprintImpl<T, S>> implements Blueprint<T, S> {
@@ -206,15 +209,43 @@ public class Cotterpin {
         }
     }
 
+    /**
+     * Begin to build a {@link Blueprint}.
+     * 
+     * @param <T> built type
+     * @param <R> {@link Blueprint} type
+     * @param t   value {@link Supplier}
+     * @return R
+     */
     @SuppressWarnings("unchecked")
     public static <T, R extends Blueprint<T, R>> R build(Supplier<T> t) {
         return (R) new BlueprintImpl<>(t);
     }
 
+    /**
+     * Begin to build a {@link Blueprint}.
+     * 
+     * @param <T> built type
+     * @param <R> {@link Blueprint} type
+     * @param t   value
+     * @return R
+     */
     public static <T, R extends Blueprint<T, R>> R build(T t) {
         return build(() -> t);
     }
 
+    /**
+     * Create an {@link IfNull} object. It is recommended that this method be
+     * {@code static}ally imported in the interest of improving the fluent
+     * experience.
+     * 
+     * @param <P>    parent type
+     * @param <T>    child type
+     * @param record {@link BiConsumer} to record onto a parent the child object
+     *               created by {@code create}
+     * @param create {@link Supplier} of {@code T}
+     * @return {@link IfNull}
+     */
     public static <P, T> IfNull<P, T> ifNull(BiConsumer<? super P, ? super T> store, Supplier<T> create) {
         return new IfNull<P, T>(store, create);
     }

@@ -19,13 +19,26 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+/**
+ * Encapsulates directions for handling of a {@code null} child value.
+ *
+ * @param <P> parent type
+ * @param <T> child type
+ */
 public class IfNull<P, T> {
 
-	final BiConsumer<? super P, ? super T> record;
-	final Supplier<? extends T> create;
+    final BiConsumer<? super P, ? super T> record;
+    final Supplier<? extends T> create;
 
-	IfNull(BiConsumer<? super P, ? super T> record, Supplier<? extends T> create) {
-		this.record = Objects.requireNonNull(record, "record");
-		this.create = Objects.requireNonNull(create, "create");
-	}
+    /**
+     * Create a new {@link IfNull} instance.
+     * 
+     * @param record {@link BiConsumer} to record onto a parent the child object
+     *               created by {@code create}
+     * @param create {@link Supplier} of {@code T}
+     */
+    IfNull(BiConsumer<? super P, ? super T> record, Supplier<? extends T> create) {
+        this.record = Objects.requireNonNull(record, "record");
+        this.create = Objects.requireNonNull(create, "create");
+    }
 }
