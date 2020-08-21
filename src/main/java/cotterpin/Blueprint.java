@@ -50,7 +50,11 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends Supplier<T> {
 
     public interface Mutator<T, U, P extends Blueprint<U, P>, S extends Mutator<T, U, P, S>> extends Blueprint<T, S> {
 
-        P onto(Function<? super U, ? extends T> prop);
+        default P onto(Function<? super U, ? extends T> prop) {
+            return onto(prop, null);
+        }
+
+        P onto(Function<? super U, ? extends T> prop, IfNull<U, T> ifNull);
     }
 
     <X, C extends Child<X, T, S, C>> C child(Supplier<X> c);

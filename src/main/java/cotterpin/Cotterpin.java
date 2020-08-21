@@ -161,9 +161,9 @@ public class Cotterpin {
         }
 
         @Override
-        public P onto(Function<? super U, ? extends T> prop) {
+        public P onto(Function<? super U, ? extends T> prop, IfNull<U, T> ifNull) {
             parent.add((Consumer<? super U>) p -> {
-                T t = prop.apply(p);
+                T t = obtainFrom(p, prop, ifNull);
                 mutations.forEach(m -> m.accept(t));
             });
             try {

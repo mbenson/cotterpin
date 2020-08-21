@@ -29,6 +29,7 @@ import org.junit.Test;
 import acme.Character;
 import acme.CharacterType;
 import acme.Franchise;
+import acme.Franchise.Info;
 
 public class CotterpinTest {
 
@@ -123,5 +124,21 @@ public class CotterpinTest {
                                 .hasFieldOrPropertyWithValue("name", "Halloween")
                                 .extracting(Franchise::getInfo).hasFieldOrPropertyWithValue("originated", Year.of(1978));
         // @formatter:on
+    }
+
+    @Test
+    public void testLazyComponent() {
+        Franchise f = new Franchise();
+        Info info = f.getInfo();
+        assertThat(Cotterpin.build(f).mutate(Info.class).onto(Franchise::getInfo, ifNull(Franchise::setInfo, Info::new))
+                .get().getInfo()).isSameAs(info);
+    }
+
+    @Test
+    public void testMissingComponent() {
+        Franchise f = new Franchise();
+        f.setInfo(null);
+        assertThat(Cotterpin.build(f).mutate(Info.class).onto(Franchise::getInfo, ifNull(Franchise::setInfo, Info::new))
+                .get().getInfo()).isNotNull();
     }
 }
