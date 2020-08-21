@@ -35,12 +35,12 @@ import cotterpin.Blueprint.Mutator;
 
 public class Cotterpin {
 
-    private static class TemplateImpl<T, S extends TemplateImpl<T, S>> implements Blueprint<T, S> {
+    private static class BlueprintImpl<T, S extends BlueprintImpl<T, S>> implements Blueprint<T, S> {
 
         final List<Consumer<? super T>> mutations = new ArrayList<>();
         Supplier<T> target;
 
-        TemplateImpl(Supplier<T> target) {
+        BlueprintImpl(Supplier<T> target) {
             this.target = target;
         }
 
@@ -72,7 +72,7 @@ public class Cotterpin {
         @Override
         public Supplier<T> singleton() {
             return new Supplier<T>() {
-                volatile Supplier<T> blueprint = TemplateImpl.this;
+                volatile Supplier<T> blueprint = BlueprintImpl.this;
                 volatile T value;
 
                 @Override
@@ -95,8 +95,8 @@ public class Cotterpin {
         }
     }
 
-    private static class ChildImpl<T, U, P extends TemplateImpl<U, P>, S extends ChildImpl<T, U, P, S>>
-            extends TemplateImpl<T, S> implements Child<T, U, P, S> {
+    private static class ChildImpl<T, U, P extends BlueprintImpl<U, P>, S extends ChildImpl<T, U, P, S>>
+            extends BlueprintImpl<T, S> implements Child<T, U, P, S> {
 
         P parent;
 
@@ -150,8 +150,8 @@ public class Cotterpin {
         }
     }
 
-    private static class MutatorImpl<T, U, P extends TemplateImpl<U, P>, S extends MutatorImpl<T, U, P, S>>
-            extends TemplateImpl<T, S> implements Mutator<T, U, P, S> {
+    private static class MutatorImpl<T, U, P extends BlueprintImpl<U, P>, S extends MutatorImpl<T, U, P, S>>
+            extends BlueprintImpl<T, S> implements Mutator<T, U, P, S> {
 
         P parent;
 
@@ -179,7 +179,7 @@ public class Cotterpin {
         }
     }
 
-    private static class IntoMapImpl<K, V, U, P extends TemplateImpl<U, P>, M extends Map<? super K, ? super V>>
+    private static class IntoMapImpl<K, V, U, P extends BlueprintImpl<U, P>, M extends Map<? super K, ? super V>>
             implements IntoMap<K, V, U, P> {
 
         Supplier<V> value;
@@ -208,7 +208,7 @@ public class Cotterpin {
 
     @SuppressWarnings("unchecked")
     public static <T, R extends Blueprint<T, R>> R build(Supplier<T> t) {
-        return (R) new TemplateImpl<>(t);
+        return (R) new BlueprintImpl<>(t);
     }
 
     public static <T, R extends Blueprint<T, R>> R builder(T t) {
