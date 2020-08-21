@@ -8,9 +8,9 @@ import java.util.function.Supplier;
 
 import org.apache.commons.lang3.reflect.Typed;
 
-public interface Template<T, S extends Template<T, S>> extends Supplier<T> {
+public interface Blueprint<T, S extends Blueprint<T, S>> extends Supplier<T> {
 
-    public interface Child<T, U, P extends Template<U, P>, S extends Child<T, U, P, S>> extends Template<T, S> {
+    public interface Child<T, U, P extends Blueprint<U, P>, S extends Child<T, U, P, S>> extends Blueprint<T, S> {
 
         P onto(BiConsumer<? super U, ? super T> mutator);
 
@@ -28,12 +28,12 @@ public interface Template<T, S extends Template<T, S>> extends Supplier<T> {
                 IfNull<U, M> ifNull);
     }
 
-    public interface IntoMap<K, V, U, P extends Template<U, P>> {
+    public interface IntoMap<K, V, U, P extends Blueprint<U, P>> {
 
         P at(K key);
     }
 
-    public interface Mutator<T, U, P extends Template<U, P>, S extends Mutator<T, U, P, S>> extends Template<T, S> {
+    public interface Mutator<T, U, P extends Blueprint<U, P>, S extends Mutator<T, U, P, S>> extends Blueprint<T, S> {
 
         P onto(Function<? super U, ? extends T> prop);
     }

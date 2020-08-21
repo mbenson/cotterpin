@@ -14,13 +14,13 @@ import java.util.function.Supplier;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.reflect.Typed;
 
-import cotterpin.Template.Child;
-import cotterpin.Template.IntoMap;
-import cotterpin.Template.Mutator;
+import cotterpin.Blueprint.Child;
+import cotterpin.Blueprint.IntoMap;
+import cotterpin.Blueprint.Mutator;
 
 public class Cotterpin {
 
-    private static class TemplateImpl<T, S extends TemplateImpl<T, S>> implements Template<T, S> {
+    private static class TemplateImpl<T, S extends TemplateImpl<T, S>> implements Blueprint<T, S> {
 
         final List<Consumer<? super T>> mutations = new ArrayList<>();
         Supplier<T> target;
@@ -171,11 +171,11 @@ public class Cotterpin {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T, R extends Template<T, R>> R build(Supplier<T> t) {
+    public static <T, R extends Blueprint<T, R>> R build(Supplier<T> t) {
         return (R) new TemplateImpl<>(t);
     }
 
-    public static <T, R extends Template<T, R>> R builder(T t) {
+    public static <T, R extends Blueprint<T, R>> R builder(T t) {
         return build(() -> t);
     }
 
