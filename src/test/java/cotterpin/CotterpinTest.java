@@ -41,6 +41,14 @@ public class CotterpinTest {
     }
 
     @Test
+    public void testSingleton() {
+        Supplier<Franchise> s = Cotterpin.build(Franchise::new).singleton();
+        Franchise franchise = s.get();
+        assertThat(franchise).isNotNull();
+        assertThat(s.get()).isNotNull().isSameAs(franchise);
+    }
+
+    @Test
     public void testSimpleProperty() {
         assertThat(
         // @formatter:off

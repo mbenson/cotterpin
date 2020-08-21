@@ -62,4 +62,6 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends Supplier<T> {
     <X, M extends Mutator<X, T, S, M>> M mutate(Typed<X> type);
 
     <X, M extends Mutator<X, T, S, M>> M mutate(Class<X> type);
+
+    Supplier<T> singleton();
 }

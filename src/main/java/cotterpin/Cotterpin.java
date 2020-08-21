@@ -69,6 +69,27 @@ public class Cotterpin {
             return (M) new MutatorImpl(this);
         }
 
+        @Override
+        public Supplier<T> singleton() {
+            return new Supplier<T>() {
+                volatile Supplier<T> blueprint = TemplateImpl.this;
+                volatile T value;
+
+                @Override
+                public T get() {
+                    if (blueprint != null) {
+                        synchronized (this) {
+                            if (blueprint != null) {
+                                value = blueprint.get();
+                                blueprint = null;
+                            }
+                        }
+                    }
+                    return value;
+                }
+            };
+        }
+
         void add(Consumer<? super T> mutation) {
             mutations.add(mutation);
         }
