@@ -211,7 +211,7 @@ public class Cotterpin {
         return (R) new BlueprintImpl<>(t);
     }
 
-    public static <T, R extends Blueprint<T, R>> R builder(T t) {
+    public static <T, R extends Blueprint<T, R>> R build(T t) {
         return build(() -> t);
     }
 
