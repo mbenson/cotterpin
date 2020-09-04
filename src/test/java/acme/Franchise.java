@@ -17,6 +17,7 @@ package acme;
 
 import java.time.Year;
 import java.util.Map;
+import java.util.Optional;
 
 public class Franchise {
     public static class Info {
@@ -34,6 +35,7 @@ public class Franchise {
     private String name;
     private Map<String, Character> characters;
     private Info info = new Info();
+    private String studio;
 
     public String getName() {
         return name;
@@ -57,5 +59,13 @@ public class Franchise {
 
     public void setInfo(Info info) {
         this.info = info;
+    }
+
+    public String getStudio() {
+        return studio;
+    }
+
+    public void maybeSetStudio(Optional<String> studio) {
+        this.studio = studio.orElse(null);
     }
 }

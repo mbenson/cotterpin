@@ -98,6 +98,20 @@ public class Cotterpin {
         }
     }
 
+    private static class RootImpl<T, S extends RootImpl<T, S>> extends BlueprintImpl<T, S> implements Blueprint.Root<T, S> {
+
+        RootImpl(Supplier<T> target) {
+            super(target);
+        }
+
+        @Override
+        public <TT, SS extends Root<TT, SS>> SS map(Function<? super T, ? extends TT> xform) {
+            @SuppressWarnings({ "unchecked", "rawtypes" })
+            final SS result = (SS) new RootImpl((Supplier<TT>) () -> Objects.requireNonNull(xform).apply(get()));
+            return result;
+        }
+    }
+
     private static class ChildImpl<T, U, P extends BlueprintImpl<U, P>, S extends ChildImpl<T, U, P, S>>
             extends BlueprintImpl<T, S> implements Child<T, U, P, S> {
 
@@ -138,6 +152,13 @@ public class Cotterpin {
             } finally {
                 parent = null;
             }
+        }
+
+        @Override
+        public <TT, SS extends Child<TT, U, P, SS>> SS map(Function<? super T, ? extends TT> xform) {
+            @SuppressWarnings({ "unchecked", "rawtypes" })
+            final SS result = (SS) new ChildImpl((Supplier<TT>) () -> xform.apply(get()), parent);
+            return result;
         }
 
         private void ensureOpen() {
@@ -213,24 +234,24 @@ public class Cotterpin {
      * Begin to build a {@link Blueprint}.
      * 
      * @param <T> built type
-     * @param <R> {@link Blueprint} type
+     * @param <R> {@link Blueprint.Root} type
      * @param t   value {@link Supplier}
      * @return R
      */
     @SuppressWarnings("unchecked")
-    public static <T, R extends Blueprint<T, R>> R build(Supplier<T> t) {
-        return (R) new BlueprintImpl<>(t);
+    public static <T, R extends Blueprint.Root<T, R>> R build(Supplier<T> t) {
+        return (R) new RootImpl<>(t);
     }
 
     /**
      * Begin to build a {@link Blueprint}.
      * 
      * @param <T> built type
-     * @param <R> {@link Blueprint} type
+     * @param <R> {@link Blueprint.Root} type
      * @param t   value
      * @return R
      */
-    public static <T, R extends Blueprint<T, R>> R build(T t) {
+    public static <T, R extends Blueprint.Root<T, R>> R build(T t) {
         return build(() -> t);
     }
 

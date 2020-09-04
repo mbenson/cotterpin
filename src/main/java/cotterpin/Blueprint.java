@@ -30,6 +30,23 @@ import org.apache.commons.lang3.reflect.Typed;
  * @param <S> self type
  */
 public interface Blueprint<T, S extends Blueprint<T, S>> extends Supplier<T> {
+    /**
+     * Root Blueprint type.
+     *
+     * @param <T>
+     * @param <S>
+     */
+    public interface Root<T, S extends Root<T, S>> extends Blueprint<T, S> {
+
+        /**
+         * Transform this {@link Blueprint}.
+         * @param <TT> new built type
+         * @param <SS> new self type
+         * @param xform {@link Function}
+         * @return {@code SS}
+         */
+        public <TT, SS extends Root<TT, SS>> SS map(Function<? super T, ? extends TT> xform);
+    }
 
     /**
      * Blueprint for an object subordinate to the graph root.
@@ -99,6 +116,15 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends Supplier<T> {
          */
         <K, M extends Map<? super K, ? super T>> IntoMap<K, T, U, P> into(Function<? super U, M> map,
                 IfNull<U, M> ifNull);
+
+        /**
+         * Transform this {@link Child}.
+         * @param <TT> new built type
+         * @param <SS> new self type
+         * @param xform {@link Function}
+         * @return {@code SS}
+         */
+        <TT, SS extends Child<TT, U, P, SS>> SS map(Function<? super T, ? extends TT> xform);
     }
 
     /**

@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Year;
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Supplier;
 
@@ -140,5 +141,21 @@ public class CotterpinTest {
         f.setInfo(null);
         assertThat(Cotterpin.build(f).mutate(Info.class).onto(Franchise::getInfo, ifNull(Franchise::setInfo, Info::new))
                 .get().getInfo()).isNotNull();
+    }
+
+    @Test
+    public void testMapRoot() {
+        assertThat(Cotterpin.build(Franchise::new).map(Optional::of).get().get()).isNotNull();
+    }
+
+    @Test
+    public void testMapChild() {
+        assertThat(
+        // @formatter:off
+        Cotterpin.build(Franchise::new)
+            .child("New Line").map(Optional::of).onto(Franchise::maybeSetStudio)
+        .get()
+        // @formatter:on
+        .getStudio()).isEqualTo("New Line");
     }
 }
