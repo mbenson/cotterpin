@@ -93,8 +93,11 @@ public class Cotterpin {
             };
         }
 
-        void add(Consumer<? super T> mutation) {
+        @Override
+        @SuppressWarnings("unchecked")
+        public S then(Consumer<? super T> mutation) {
             mutations.add(mutation);
+            return (S) this;
         }
     }
 
@@ -125,21 +128,21 @@ public class Cotterpin {
         @Override
         public P onto(BiConsumer<? super U, ? super T> mutator) {
             ensureOpen();
-            parent.add(p -> mutator.accept(p, get()));
+            parent.then(p -> mutator.accept(p, get()));
             return close();
         }
 
         @Override
         public <C extends Collection<? super T>> P addTo(Function<? super U, C> coll) {
             ensureOpen();
-            parent.add(p -> coll.apply(p).add(get()));
+            parent.then(p -> coll.apply(p).add(get()));
             return close();
         }
 
         @Override
         public <C extends Collection<? super T>> P addTo(Function<? super U, C> coll, IfNull<U, C> ifNull) {
             ensureOpen();
-            parent.add(p -> obtainFrom(p, coll, ifNull).add(get()));
+            parent.then(p -> obtainFrom(p, coll, ifNull).add(get()));
             return close();
         }
 
@@ -186,7 +189,7 @@ public class Cotterpin {
 
         @Override
         public P onto(Function<? super U, ? extends T> prop, IfNull<U, T> ifNull) {
-            parent.add((Consumer<? super U>) p -> {
+            parent.then(p -> {
                 T t = obtainFrom(p, prop, ifNull);
                 mutations.forEach(m -> m.accept(t));
             });
@@ -221,7 +224,7 @@ public class Cotterpin {
         @Override
         public P at(K key) {
             Validate.validState(parent != null);
-            parent.add((Consumer<U>) u -> obtainFrom(u, map, ifNull).put(key, value.get()));
+            parent.then(u -> obtainFrom(u, map, ifNull).put(key, value.get()));
             try {
                 return parent;
             } finally {

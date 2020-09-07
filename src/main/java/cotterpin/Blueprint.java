@@ -18,6 +18,7 @@ package cotterpin;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -220,6 +221,13 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends Supplier<T> {
      * @return M
      */
     <X, M extends Mutator<X, T, S, M>> M mutate(Class<X> type);
+
+    /**
+     * Add a step to the blueprint plan.
+     * @param mutation which will be applied
+     * @return {@code this}, fluently
+     */
+    S then(Consumer<? super T> mutation);
 
     /**
      * Explicitly wrap the blueprint in a singleton {@link Supplier}
