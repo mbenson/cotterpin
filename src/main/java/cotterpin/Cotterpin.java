@@ -15,12 +15,12 @@
  */
 package cotterpin;
 
-import java.util.ArrayList;
+import static cotterpin.BuildStrategy.prototype;
+import static cotterpin.BuildStrategy.singleton;
+
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -40,77 +40,55 @@ public class Cotterpin {
 
     private static class BlueprintImpl<T, S extends BlueprintImpl<T, S>> implements Blueprint<T, S> {
 
-        final List<Consumer<? super T>> mutations = new ArrayList<>();
-        Supplier<T> target;
+        final BuildStrategy<T> strategy;
 
-        BlueprintImpl(Supplier<T> target) {
-            this.target = target;
+        BlueprintImpl(BuildStrategy<T> strategy, Supplier<T> target) {
+            this.strategy = strategy;
+            strategy.initialize(target);
         }
 
         @Override
         public T get() {
-            T t = Optional.ofNullable(target).map(Supplier::get).orElseThrow(IllegalStateException::new);
-            mutations.forEach(m -> m.accept(t));
-            return t;
+            return strategy.get();
         }
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
         public <X, C extends Child<X, T, S, C>> C child(Supplier<X> c) {
-            return (C) new ChildImpl(Objects.requireNonNull(c), this);
+            return (C) new ChildImpl(strategy.child(), Objects.requireNonNull(c), this);
         }
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
         public <X, M extends Mutator<X, T, S, M>> M mutate(Typed<X> type) {
-            return (M) new MutatorImpl(this);
+            return (M) new MutatorImpl(strategy.child(), this);
         }
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
         public <X, M extends Mutator<X, T, S, M>> M mutate(Class<X> type) {
-            return (M) new MutatorImpl(this);
-        }
-
-        @Override
-        public Supplier<T> singleton() {
-            return new Supplier<T>() {
-                volatile Supplier<T> blueprint = BlueprintImpl.this;
-                volatile T value;
-
-                @Override
-                public T get() {
-                    if (blueprint != null) {
-                        synchronized (this) {
-                            if (blueprint != null) {
-                                value = blueprint.get();
-                                blueprint = null;
-                            }
-                        }
-                    }
-                    return value;
-                }
-            };
+            return (M) new MutatorImpl(strategy.child(), this);
         }
 
         @Override
         @SuppressWarnings("unchecked")
         public S then(Consumer<? super T> mutation) {
-            mutations.add(mutation);
+            strategy.apply(mutation);
             return (S) this;
         }
     }
 
-    private static class RootImpl<T, S extends RootImpl<T, S>> extends BlueprintImpl<T, S> implements Blueprint.Root<T, S> {
+    private static class RootImpl<T, S extends RootImpl<T, S>> extends BlueprintImpl<T, S>
+            implements Blueprint.Root<T, S> {
 
-        RootImpl(Supplier<T> target) {
-            super(target);
+        RootImpl(BuildStrategy<T> strategy, Supplier<T> target) {
+            super(strategy, target);
         }
 
         @Override
         public <TT, SS extends Root<TT, SS>> SS map(Function<? super T, ? extends TT> xform) {
             @SuppressWarnings({ "unchecked", "rawtypes" })
-            final SS result = (SS) new RootImpl((Supplier<TT>) () -> Objects.requireNonNull(xform).apply(get()));
+            final SS result = (SS) new RootImpl(strategy.child(), () -> Objects.requireNonNull(xform).apply(get()));
             return result;
         }
     }
@@ -120,8 +98,8 @@ public class Cotterpin {
 
         P parent;
 
-        ChildImpl(Supplier<T> target, P parent) {
-            super(target);
+        ChildImpl(BuildStrategy<T> strategy, Supplier<T> target, P parent) {
+            super(strategy, target);
             this.parent = parent;
         }
 
@@ -160,7 +138,7 @@ public class Cotterpin {
         @Override
         public <TT, SS extends Child<TT, U, P, SS>> SS map(Function<? super T, ? extends TT> xform) {
             @SuppressWarnings({ "unchecked", "rawtypes" })
-            final SS result = (SS) new ChildImpl((Supplier<TT>) () -> xform.apply(get()), parent);
+            final SS result = (SS) new ChildImpl(strategy.child(), () -> xform.apply(get()), parent);
             return result;
         }
 
@@ -180,18 +158,46 @@ public class Cotterpin {
     private static class MutatorImpl<T, U, P extends BlueprintImpl<U, P>, S extends MutatorImpl<T, U, P, S>>
             extends BlueprintImpl<T, S> implements Mutator<T, U, P, S> {
 
+        private static class MutatorStrategy<T> implements BuildStrategy<T> {
+            final BuildStrategy<T> delegate = prototype();
+            final BuildStrategy<?> realParent;
+
+            MutatorStrategy(BuildStrategy<?> realParent) {
+                this.realParent = realParent;
+            }
+
+            @Override
+            public T get() {
+                return delegate.get();
+            }
+
+            @Override
+            public void initialize(Supplier<T> target) {
+            }
+
+            @Override
+            public void apply(Consumer<? super T> mutation) {
+                delegate.apply(mutation);
+            }
+
+            @Override
+            public <U> BuildStrategy<U> child() {
+                return realParent.child();
+            }
+        }
+
         P parent;
 
-        MutatorImpl(P parent) {
-            super(null);
+        MutatorImpl(BuildStrategy<T> strategy, P parent) {
+            super(new MutatorStrategy<>(strategy), null);
             this.parent = parent;
         }
 
         @Override
         public P onto(Function<? super U, ? extends T> prop, IfNull<U, T> ifNull) {
             parent.then(p -> {
-                T t = obtainFrom(p, prop, ifNull);
-                mutations.forEach(m -> m.accept(t));
+                ((MutatorStrategy<T>) strategy).delegate.initialize(() -> obtainFrom(p, prop, ifNull));
+                strategy.get();
             });
             try {
                 return parent;
@@ -234,20 +240,36 @@ public class Cotterpin {
     }
 
     /**
-     * Begin to build a {@link Blueprint}.
+     * Begin to build a {@link Blueprint} (implicit singleton
+     * {@link BuildStrategy}).
      * 
      * @param <T> built type
      * @param <R> {@link Blueprint.Root} type
      * @param t   value {@link Supplier}
      * @return R
      */
-    @SuppressWarnings("unchecked")
     public static <T, R extends Blueprint.Root<T, R>> R build(Supplier<T> t) {
-        return (R) new RootImpl<>(t);
+        return build(singleton(), t);
     }
 
     /**
      * Begin to build a {@link Blueprint}.
+     * 
+     * @param strategy for build
+     * @param t        value {@link Supplier}
+     * 
+     * @param <T>      built type
+     * @param <R>      {@link Blueprint.Root} type
+     * @return R
+     */
+    @SuppressWarnings("unchecked")
+    public static <T, R extends Blueprint.Root<T, R>> R build(BuildStrategy<T> strategy, Supplier<T> t) {
+        return (R) new RootImpl<>(strategy, t);
+    }
+
+    /**
+     * Begin to build a {@link Blueprint} (implicit singleton
+     * {@link BuildStrategy}).
      * 
      * @param <T> built type
      * @param <R> {@link Blueprint.Root} type
@@ -255,7 +277,7 @@ public class Cotterpin {
      * @return R
      */
     public static <T, R extends Blueprint.Root<T, R>> R build(T t) {
-        return build(() -> t);
+        return build(singleton(), () -> t);
     }
 
     /**

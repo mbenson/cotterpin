@@ -15,6 +15,8 @@
  */
 package cotterpin;
 
+import static cotterpin.BuildStrategy.prototype;
+import static cotterpin.BuildStrategy.singleton;
 import static cotterpin.Cotterpin.ifNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -35,19 +37,27 @@ import acme.Franchise.Info;
 public class CotterpinTest {
 
     @Test
-    public void testBasic() {
+    public void testImplicitSingleton() {
         Supplier<Franchise> s = Cotterpin.build(Franchise::new);
         Franchise franchise = s.get();
         assertThat(franchise).isNotNull();
-        assertThat(s.get()).isNotNull().isNotSameAs(franchise);
+        assertThat(s.get()).isNotNull().isSameAs(franchise);
     }
 
     @Test
-    public void testSingleton() {
-        Supplier<Franchise> s = Cotterpin.build(Franchise::new).singleton();
+    public void testExplicitSingleton() {
+        Supplier<Franchise> s = Cotterpin.build(singleton(), Franchise::new);
         Franchise franchise = s.get();
         assertThat(franchise).isNotNull();
         assertThat(s.get()).isNotNull().isSameAs(franchise);
+    }
+
+    @Test
+    public void testPrototype() {
+        Supplier<Franchise> s = Cotterpin.build(prototype(), Franchise::new);
+        Franchise franchise = s.get();
+        assertThat(franchise).isNotNull();
+        assertThat(s.get()).isNotNull().isNotSameAs(franchise);
     }
 
     @Test
@@ -156,6 +166,6 @@ public class CotterpinTest {
             .child("New Line").map(Optional::of).onto(Franchise::maybeSetStudio)
         .get()
         // @formatter:on
-        .getStudio()).isEqualTo("New Line");
+                        .getStudio()).isEqualTo("New Line");
     }
 }

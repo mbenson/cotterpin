@@ -228,11 +228,4 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends Supplier<T> {
      * @return {@code this}, fluently
      */
     S then(Consumer<? super T> mutation);
-
-    /**
-     * Explicitly wrap the blueprint in a singleton {@link Supplier}
-     * 
-     * @return {@link Supplier}
-     */
-    Supplier<T> singleton();
 }
