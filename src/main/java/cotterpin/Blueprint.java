@@ -41,8 +41,9 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends Supplier<T> {
 
         /**
          * Transform this {@link Blueprint}.
-         * @param <TT> new built type
-         * @param <SS> new self type
+         * 
+         * @param <TT>  new built type
+         * @param <SS>  new self type
          * @param xform {@link Function}
          * @return {@code SS}
          */
@@ -120,8 +121,9 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends Supplier<T> {
 
         /**
          * Transform this {@link Child}.
-         * @param <TT> new built type
-         * @param <SS> new self type
+         * 
+         * @param <TT>  new built type
+         * @param <SS>  new self type
          * @param xform {@link Function}
          * @return {@code SS}
          */
@@ -224,8 +226,19 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends Supplier<T> {
 
     /**
      * Add a step to the blueprint plan.
+     * 
      * @param mutation which will be applied
      * @return {@code this}, fluently
      */
     S then(Consumer<? super T> mutation);
+
+    /**
+     * In conjunction with inherited strategies (where applicable), apply the specified
+     * {@link ChildStrategy} set from this point onward until and unless this method
+     * is called again.
+     * 
+     * @param childStrategies
+     * @return {@code this}, fluently
+     */
+    S strategy(ChildStrategy... strategies);
 }

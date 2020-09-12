@@ -19,6 +19,8 @@ import static cotterpin.BuildStrategy.prototype;
 import static cotterpin.BuildStrategy.singleton;
 import static cotterpin.Cotterpin.ifNull;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 
 import java.time.Year;
 import java.util.LinkedHashSet;
@@ -27,7 +29,9 @@ import java.util.TreeMap;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.reflect.TypeLiteral;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import acme.Character;
 import acme.CharacterType;
@@ -167,5 +171,50 @@ public class CotterpinTest {
         .get()
         // @formatter:on
                         .getStudio()).isEqualTo("New Line");
+    }
+
+    @Test
+    public void testNull() {
+        Assertions.assertThat(Cotterpin.build(() -> null).get()).isNull();
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testNullRootWithDefaultChildStrategy() {
+        Cotterpin.build((Franchise) null).child("").onto(Franchise::setName).get();
+    }
+
+    @Test
+    public void testIgnoreNullParentStrategy() {
+        Assertions.assertThat(Cotterpin.build((Franchise) null).strategy(ChildStrategy.IGNORE_NULL_PARENT).child("")
+                .onto(Franchise::setName).get()).isNull();
+    }
+
+    @Test
+    public void testIgnoreNullValueStrategy() {
+        Franchise franchise = Mockito.mock(Franchise.class);
+        Cotterpin.build(franchise).strategy(ChildStrategy.IGNORE_NULL_VALUE).child((String) null)
+                .onto(Franchise::setName).get();
+        Mockito.verify(franchise, never()).setName(null);
+    }
+
+    @Test
+    public void testRestoreDefaultStrategy() {
+        Franchise franchise = Mockito.mock(Franchise.class);
+        Cotterpin.build(franchise).strategy(ChildStrategy.IGNORE_NULL_VALUE).child((String) null)
+                .strategy(ChildStrategy.DEFAULT).onto(Franchise::setName).get();
+        Mockito.verify(franchise, times(1)).setName(null);
+    }
+
+    @Test
+    public void testResetStrategy() {
+        Assertions.assertThatThrownBy(() -> {
+            Cotterpin.build((Character) null)
+            //@formatter:off
+                .strategy(ChildStrategy.IGNORE_NULL_PARENT)
+                .child(CharacterType.ALIEN).strategy(ChildStrategy.DEFAULT, ChildStrategy.IGNORE_NULL_VALUE)
+                .onto(Character::setType)
+                //@formatter:on
+                    .get();
+        }).isInstanceOf(NullPointerException.class);
     }
 }

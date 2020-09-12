@@ -38,42 +38,76 @@ import cotterpin.Blueprint.Mutator;
  */
 public class Cotterpin {
 
+    private static class ChildStrategyManager implements ChildStrategy {
+        final ChildStrategy inherited;
+        ChildStrategy current;
+
+        ChildStrategyManager(ChildStrategy inherited) {
+            this.inherited = inherited;
+            this.current = inherited;
+        }
+
+        void adopt(ChildStrategy... childStrategies) {
+            ChildStrategy s = inherited;
+            for (ChildStrategy childStrategy : childStrategies) {
+                s = childStrategy.then(s);
+            }
+            synchronized (this) {
+                current = s;
+            }
+        }
+
+        @Override
+        public <P, T> BiConsumer<P, T> apply(BiConsumer<P, T> cmer) {
+            return current.apply(cmer);
+        }
+    }
+
     private static class BlueprintImpl<T, S extends BlueprintImpl<T, S>> implements Blueprint<T, S> {
 
-        final BuildStrategy<T> strategy;
+        final BuildStrategy<T> buildStrategy;
+        final ChildStrategyManager children;
 
-        BlueprintImpl(BuildStrategy<T> strategy, Supplier<T> target) {
-            this.strategy = strategy;
-            strategy.initialize(target);
+        BlueprintImpl(BuildStrategy<T> buildStrategy, Supplier<T> target, ChildStrategy childStrategy) {
+            this.buildStrategy = buildStrategy;
+            buildStrategy.initialize(target);
+            children = new ChildStrategyManager(childStrategy);
         }
 
         @Override
         public T get() {
-            return strategy.get();
+            return buildStrategy.get();
         }
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
         public <X, C extends Child<X, T, S, C>> C child(Supplier<X> c) {
-            return (C) new ChildImpl(strategy.child(), Objects.requireNonNull(c), this);
+            return (C) new ChildImpl(buildStrategy.child(), Objects.requireNonNull(c), this, children.current);
         }
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
         public <X, M extends Mutator<X, T, S, M>> M mutate(Typed<X> type) {
-            return (M) new MutatorImpl(strategy.child(), this);
+            return (M) new MutatorImpl(buildStrategy.child(), this, children.current);
         }
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
         public <X, M extends Mutator<X, T, S, M>> M mutate(Class<X> type) {
-            return (M) new MutatorImpl(strategy.child(), this);
+            return (M) new MutatorImpl(buildStrategy.child(), this, children.current);
         }
 
         @Override
         @SuppressWarnings("unchecked")
         public S then(Consumer<? super T> mutation) {
-            strategy.apply(mutation);
+            buildStrategy.apply(mutation);
+            return (S) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public S strategy(ChildStrategy... strategies) {
+            children.adopt(strategies);
             return (S) this;
         }
     }
@@ -81,14 +115,15 @@ public class Cotterpin {
     private static class RootImpl<T, S extends RootImpl<T, S>> extends BlueprintImpl<T, S>
             implements Blueprint.Root<T, S> {
 
-        RootImpl(BuildStrategy<T> strategy, Supplier<T> target) {
-            super(strategy, target);
+        RootImpl(BuildStrategy<T> buildStrategy, Supplier<T> target) {
+            super(buildStrategy, target, ChildStrategy.DEFAULT);
         }
 
         @Override
         public <TT, SS extends Root<TT, SS>> SS map(Function<? super T, ? extends TT> xform) {
             @SuppressWarnings({ "unchecked", "rawtypes" })
-            final SS result = (SS) new RootImpl(strategy.child(), () -> Objects.requireNonNull(xform).apply(get()));
+            final SS result = (SS) new RootImpl(buildStrategy.child(),
+                    () -> Objects.requireNonNull(xform).apply(get()));
             return result;
         }
     }
@@ -98,29 +133,31 @@ public class Cotterpin {
 
         P parent;
 
-        ChildImpl(BuildStrategy<T> strategy, Supplier<T> target, P parent) {
-            super(strategy, target);
+        ChildImpl(BuildStrategy<T> buildStrategy, Supplier<T> target, P parent, ChildStrategy childStrategy) {
+            super(buildStrategy, target, childStrategy);
             this.parent = parent;
         }
 
         @Override
         public P onto(BiConsumer<? super U, ? super T> mutator) {
             ensureOpen();
-            parent.then(p -> mutator.accept(p, get()));
+            parent.then(p -> children.apply(mutator).accept(p, get()));
             return close();
         }
 
         @Override
         public <C extends Collection<? super T>> P addTo(Function<? super U, C> coll) {
             ensureOpen();
-            parent.then(p -> coll.apply(p).add(get()));
+            BiConsumer<U, T> cmer = children.apply((u, t) -> coll.apply(u).add(t));
+            parent.then(p -> cmer.accept(p, get()));
             return close();
         }
 
         @Override
         public <C extends Collection<? super T>> P addTo(Function<? super U, C> coll, IfNull<U, C> ifNull) {
             ensureOpen();
-            parent.then(p -> obtainFrom(p, coll, ifNull).add(get()));
+            BiConsumer<U, T> cmer = children.apply((u, t) -> obtainFrom(u, coll, ifNull).add(t));
+            parent.then(p -> cmer.accept(p, get()));
             return close();
         }
 
@@ -129,7 +166,7 @@ public class Cotterpin {
                 IfNull<U, M> ifNull) {
             ensureOpen();
             try {
-                return new IntoMapImpl<>(this, map, parent, ifNull);
+                return new IntoMapImpl<>(this, map, parent, ifNull, children.current);
             } finally {
                 parent = null;
             }
@@ -138,7 +175,8 @@ public class Cotterpin {
         @Override
         public <TT, SS extends Child<TT, U, P, SS>> SS map(Function<? super T, ? extends TT> xform) {
             @SuppressWarnings({ "unchecked", "rawtypes" })
-            final SS result = (SS) new ChildImpl(strategy.child(), () -> xform.apply(get()), parent);
+            final SS result = (SS) new ChildImpl(buildStrategy.child(), () -> xform.apply(get()), parent,
+                    children.current);
             return result;
         }
 
@@ -188,16 +226,16 @@ public class Cotterpin {
 
         P parent;
 
-        MutatorImpl(BuildStrategy<T> strategy, P parent) {
-            super(new MutatorStrategy<>(strategy), null);
+        MutatorImpl(BuildStrategy<T> buildStrategy, P parent, ChildStrategy childStrategy) {
+            super(new MutatorStrategy<>(buildStrategy), null, childStrategy);
             this.parent = parent;
         }
 
         @Override
         public P onto(Function<? super U, ? extends T> prop, IfNull<U, T> ifNull) {
             parent.then(p -> {
-                ((MutatorStrategy<T>) strategy).delegate.initialize(() -> obtainFrom(p, prop, ifNull));
-                strategy.get();
+                ((MutatorStrategy<T>) buildStrategy).delegate.initialize(() -> obtainFrom(p, prop, ifNull));
+                buildStrategy.get();
             });
             try {
                 return parent;
@@ -215,22 +253,28 @@ public class Cotterpin {
     private static class IntoMapImpl<K, V, U, P extends BlueprintImpl<U, P>, M extends Map<? super K, ? super V>>
             implements IntoMap<K, V, U, P> {
 
-        Supplier<V> value;
-        Function<? super U, M> map;
+        final Supplier<V> value;
+        final Function<? super U, M> map;
+        final IfNull<U, M> ifNull;
+        final ChildStrategy childStrategy;
         P parent;
-        IfNull<U, M> ifNull;
 
-        IntoMapImpl(Supplier<V> value, Function<? super U, M> map, P parent, IfNull<U, M> ifNull) {
+        IntoMapImpl(Supplier<V> value, Function<? super U, M> map, P parent, IfNull<U, M> ifNull,
+                ChildStrategy childStrategy) {
             this.value = value;
             this.map = map;
             this.parent = parent;
             this.ifNull = ifNull;
+            this.childStrategy = childStrategy;
         }
 
         @Override
         public P at(K key) {
             Validate.validState(parent != null);
-            parent.then(u -> obtainFrom(u, map, ifNull).put(key, value.get()));
+
+            BiConsumer<U, V> cmer = childStrategy.apply((u, v) -> obtainFrom(u, map, ifNull).put(key, v));
+
+            parent.then(p -> cmer.accept(p, value.get()));
             try {
                 return parent;
             } finally {
