@@ -146,27 +146,26 @@ public class Cotterpin {
         }
 
         @Override
-        public <C extends Collection<? super T>> P addTo(Function<? super U, C> coll) {
+        public <C extends Collection<? super T>> P addTo(Function<? super U, C> coll,
+                ComponentStrategy<U, C> strategy) {
             ensureOpen();
-            BiConsumer<U, T> cmer = children.apply((u, t) -> coll.apply(u).add(t));
-            parent.then(p -> cmer.accept(p, get()));
-            return close();
-        }
 
-        @Override
-        public <C extends Collection<? super T>> P addTo(Function<? super U, C> coll, IfNull<U, C> ifNull) {
-            ensureOpen();
-            BiConsumer<U, T> cmer = children.apply((u, t) -> obtainFrom(u, coll, ifNull).add(t));
+            @SuppressWarnings("unchecked")
+            final Function<U, C> x = strategy.apply((Function<U, C>) coll);
+
+            BiConsumer<U, T> cmer = children.apply((u, t) -> x.apply(u).add(t));
             parent.then(p -> cmer.accept(p, get()));
             return close();
         }
 
         @Override
         public <K, M extends Map<? super K, ? super T>> IntoMap<K, T, U, P> into(Function<? super U, M> map,
-                IfNull<U, M> ifNull) {
+                ComponentStrategy<U, M> strategy) {
             ensureOpen();
             try {
-                return new IntoMapImpl<>(this, map, parent, ifNull, children.current);
+                @SuppressWarnings("unchecked")
+                final Function<U, M> m = strategy.apply((Function<U, M>) map);
+                return new IntoMapImpl<>(this, m, parent, children.current);
             } finally {
                 parent = null;
             }
@@ -232,9 +231,11 @@ public class Cotterpin {
         }
 
         @Override
-        public P onto(Function<? super U, ? extends T> prop, IfNull<U, T> ifNull) {
+        public P onto(Function<? super U, ? extends T> prop, ComponentStrategy<U, T> strategy) {
             parent.then(p -> {
-                ((MutatorStrategy<T>) buildStrategy).delegate.initialize(() -> obtainFrom(p, prop, ifNull));
+                @SuppressWarnings("unchecked")
+                final Function<U, T> x = strategy.apply((Function<U, T>) prop);
+                ((MutatorStrategy<T>) buildStrategy).delegate.initialize(() -> x.apply(p));
                 buildStrategy.get();
             });
             try {
@@ -255,16 +256,13 @@ public class Cotterpin {
 
         final Supplier<V> value;
         final Function<? super U, M> map;
-        final IfNull<U, M> ifNull;
         final ChildStrategy childStrategy;
         P parent;
 
-        IntoMapImpl(Supplier<V> value, Function<? super U, M> map, P parent, IfNull<U, M> ifNull,
-                ChildStrategy childStrategy) {
+        IntoMapImpl(Supplier<V> value, Function<? super U, M> map, P parent, ChildStrategy childStrategy) {
             this.value = value;
             this.map = map;
             this.parent = parent;
-            this.ifNull = ifNull;
             this.childStrategy = childStrategy;
         }
 
@@ -272,7 +270,7 @@ public class Cotterpin {
         public P at(K key) {
             Validate.validState(parent != null);
 
-            BiConsumer<U, V> cmer = childStrategy.apply((u, v) -> obtainFrom(u, map, ifNull).put(key, v));
+            final BiConsumer<U, V> cmer = childStrategy.apply((u, v) -> map.apply(u).put(key, v));
 
             parent.then(p -> cmer.accept(p, value.get()));
             try {
@@ -322,31 +320,6 @@ public class Cotterpin {
      */
     public static <T, R extends Blueprint.Root<T, R>> R build(T t) {
         return build(singleton(), () -> t);
-    }
-
-    /**
-     * Create an {@link IfNull} object. It is recommended that this method be
-     * {@code static}ally imported in the interest of improving the fluent
-     * experience.
-     * 
-     * @param <P>    parent type
-     * @param <T>    child type
-     * @param record {@link BiConsumer} to record onto a parent the child object
-     *               created by {@code create}
-     * @param create {@link Supplier} of {@code T}
-     * @return {@link IfNull}
-     */
-    public static <P, T> IfNull<P, T> ifNull(BiConsumer<? super P, ? super T> store, Supplier<T> create) {
-        return new IfNull<P, T>(store, create);
-    }
-
-    private static <P, T> T obtainFrom(P parent, Function<? super P, ? extends T> retrieve, IfNull<P, T> ifNull) {
-        T result = retrieve.apply(parent);
-        if (result == null && ifNull != null) {
-            result = ifNull.create.get();
-            ifNull.record.accept(parent, result);
-        }
-        return result;
     }
 
     private Cotterpin() {

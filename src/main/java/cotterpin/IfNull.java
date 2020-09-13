@@ -17,15 +17,16 @@ package cotterpin;
 
 import java.util.Objects;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * Encapsulates directions for handling of a {@code null} child value.
+ * {@link ComponentStrategy} to handle missing values.
  *
  * @param <P> parent type
  * @param <T> child type
  */
-public class IfNull<P, T> {
+class IfNull<P, T> implements ComponentStrategy<P, T> {
 
     final BiConsumer<? super P, ? super T> record;
     final Supplier<? extends T> create;
@@ -40,5 +41,22 @@ public class IfNull<P, T> {
     IfNull(BiConsumer<? super P, ? super T> record, Supplier<? extends T> create) {
         this.record = Objects.requireNonNull(record, "record");
         this.create = Objects.requireNonNull(create, "create");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Function<P, T> apply(Function<P, T> t) {
+        return p -> obtainFrom(p, t);
+    }
+
+    private T obtainFrom(P parent, Function<? super P, ? extends T> retrieve) {
+        T result = retrieve.apply(parent);
+        if (result == null) {
+            result = create.get();
+            record.accept(parent, result);
+        }
+        return result;
     }
 }

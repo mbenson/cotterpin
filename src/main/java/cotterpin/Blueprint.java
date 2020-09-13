@@ -77,20 +77,19 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends Supplier<T> {
          * @return parent blueprint, fluently
          */
         default <C extends Collection<? super T>> P addTo(Function<? super U, C> coll) {
-            return addTo(coll, null);
+            return addTo(coll, ComponentStrategy.noop());
         }
 
         /**
          * Add the supplied value to a {@link Collection} property of the parent,
-         * obtained by {@code coll}, with optional handling of a {@code null}
-         * {@link Collection}.
+         * obtained by {@code coll}, with component strategy.
          * 
-         * @param <C>    {@link Collection} type
-         * @param coll   {@link Function}
-         * @param ifNull
+         * @param <C>      {@link Collection} type
+         * @param coll     {@link Function}
+         * @param strategy to apply
          * @return parent blueprint, fluently
          */
-        <C extends Collection<? super T>> P addTo(Function<? super U, C> coll, IfNull<U, C> ifNull);
+        <C extends Collection<? super T>> P addTo(Function<? super U, C> coll, ComponentStrategy<U, C> strategy);
 
         /**
          * Begin the process of putting the supplied value into a {@link Map} property
@@ -102,22 +101,21 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends Supplier<T> {
          * @return {@link IntoMap} fluent step
          */
         default <K, M extends Map<? super K, ? super T>> IntoMap<K, T, U, P> into(Function<? super U, M> map) {
-            return into(map, null);
+            return into(map, ComponentStrategy.noop());
         }
 
         /**
          * Begin the process of putting the supplied value into a {@link Map} property
-         * of the parent, obtained by {@code map}, with optional handling of a
-         * {@code null} {@link Map}.
+         * of the parent, obtained by {@code map}, with component strategy.
          * 
-         * @param <K>    key type
-         * @param <M>    {@link Map} type
-         * @param map    {@link Function}
-         * @param ifNull
+         * @param <K>      key type
+         * @param <M>      {@link Map} type
+         * @param map      {@link Function}
+         * @param strategy to apply
          * @return {@link IntoMap} fluent step
          */
         <K, M extends Map<? super K, ? super T>> IntoMap<K, T, U, P> into(Function<? super U, M> map,
-                IfNull<U, M> ifNull);
+                ComponentStrategy<U, M> strategy);
 
         /**
          * Transform this {@link Child}.
@@ -168,18 +166,18 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends Supplier<T> {
          * @return parent blueprint
          */
         default P onto(Function<? super U, ? extends T> prop) {
-            return onto(prop, null);
+            return onto(prop, ComponentStrategy.noop());
         }
 
         /**
          * Apply the configured mutations onto the component obtained using
-         * {@code prop}, with optional {@code null} handling.
+         * {@code prop}, with component strategy.
          * 
-         * @param prop   {@link Function}
-         * @param ifNull
+         * @param prop     {@link Function}
+         * @param strategy to apply
          * @return parent blueprint
          */
-        P onto(Function<? super U, ? extends T> prop, IfNull<U, T> ifNull);
+        P onto(Function<? super U, ? extends T> prop, ComponentStrategy<U, T> strategy);
     }
 
     /**
@@ -233,9 +231,9 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends Supplier<T> {
     S then(Consumer<? super T> mutation);
 
     /**
-     * In conjunction with inherited strategies (where applicable), apply the specified
-     * {@link ChildStrategy} set from this point onward until and unless this method
-     * is called again.
+     * In conjunction with inherited strategies (where applicable), apply the
+     * specified {@link ChildStrategy} set from this point onward until and unless
+     * this method is called again.
      * 
      * @param childStrategies
      * @return {@code this}, fluently

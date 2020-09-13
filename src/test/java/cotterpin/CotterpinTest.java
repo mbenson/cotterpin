@@ -17,7 +17,7 @@ package cotterpin;
 
 import static cotterpin.BuildStrategy.prototype;
 import static cotterpin.BuildStrategy.singleton;
-import static cotterpin.Cotterpin.ifNull;
+import static cotterpin.ComponentStrategy.ifNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
