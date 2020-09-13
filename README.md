@@ -10,6 +10,13 @@ Cotterpin.build(Franchise::new)
 .get()
 ```
 
+Shorthand version:
+```
+Cotterpin.$(Franchise::new)
+    .$("Psycho").onto(Franchise::setName)
+.get()
+```
+
 ### collection element
 ```
 Cotterpin.build(Franchise::new)
@@ -19,6 +26,19 @@ Cotterpin.build(Franchise::new)
         .child("Book").addTo(Character::getWeaknesses, ifNull(Character::setWeaknesses, LinkedHashSet<String>::new))
         .child("Chainsaw").addTo(Character::getWeaknesses)
         .child("Boomstick").addTo(Character::getWeaknesses)
+    .into(Franchise::getCharacters, ifNull(Franchise::setCharacters, TreeMap::new)).at("Henrietta")
+.get()
+```
+
+Shorthand version:
+```
+Cotterpin.$(Franchise::new)
+    .$("Evil Dead").onto(Franchise::setName)
+    .$(Character::new)
+        .$(CharacterType.UNDEAD).onto(Character::setType)
+        .$("Book").addTo(Character::getWeaknesses, ifNull(Character::setWeaknesses, LinkedHashSet<String>::new))
+        .$("Chainsaw").addTo(Character::getWeaknesses)
+        .$("Boomstick").addTo(Character::getWeaknesses)
     .into(Franchise::getCharacters, ifNull(Franchise::setCharacters, TreeMap::new)).at("Henrietta")
 .get()
 ```
@@ -33,12 +53,32 @@ Cotterpin.build(Franchise::new)
 .get()
 ```
 
+Shorthand version:
+```
+Cotterpin.$(Franchise::new)
+    .$("Nightmare on Elm Street").onto(Franchise::setName)
+    .$(Character::new)
+        .$(CharacterType.GHOST).onto(Character::setType)
+    .into(Franchise::getCharacters, ifNull(Franchise::setCharacters, TreeMap::new)).at("Freddy Krueger")
+.get()
+```
+
 ### raw typed component
 ```
 Cotterpin.build(Franchise::new)
     .child("Halloween").onto(Franchise::setName)
     .mutate(Franchise.Info.class)
         .child(Year.of(1978)).onto(Franchise.Info::setOriginated)
+    .onto(Franchise::getInfo)
+.get()
+```
+
+Shorthand version:
+```
+Cotterpin.$(Franchise::new)
+    .$("Halloween").onto(Franchise::setName)
+    .__(Franchise.Info.class)
+        .$(Year.of(1978)).onto(Franchise.Info::setOriginated)
     .onto(Franchise::getInfo)
 .get()
 ```
@@ -53,3 +93,14 @@ Cotterpin.build(Franchise::new)
     .onto(Franchise::getInfo)
 .get()
 ```
+
+Shorthand version:
+```
+Cotterpin.$(Franchise::new)
+    .$("Halloween").onto(Franchise::setName)
+    .__(new TypeLiteral<Franchise.Info>() {})
+        .$(Year.of(1978)).onto(Franchise.Info::setOriginated)
+    .onto(Franchise::getInfo)
+.get()
+```
+

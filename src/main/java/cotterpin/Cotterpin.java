@@ -322,6 +322,47 @@ public class Cotterpin {
         return build(singleton(), () -> t);
     }
 
+    
+    /**
+     * Shorthand for {@link #build(Supplier)}.
+     * 
+     * @param <T> built type
+     * @param <R> {@link Blueprint.Root} type
+     * @param t   value {@link Supplier}
+     * @return R
+     */
+    public static <T, R extends Blueprint.Root<T, R>> R $(Supplier<T> t) {
+        return build(singleton(), t);
+    }
+    
+    /**
+     * Shorthand for {@link #build(BuildStrategy, Supplier)}.
+     * 
+     * @param strategy for build
+     * @param t        value {@link Supplier}
+     * 
+     * @param <T>      built type
+     * @param <R>      {@link Blueprint.Root} type
+     * @return R
+     */
+    @SuppressWarnings("unchecked")
+    public static <T, R extends Blueprint.Root<T, R>> R $(BuildStrategy<T> strategy, Supplier<T> t) {
+        return (R) new RootImpl<>(strategy, t);
+    }
+    
+    /**
+     * Shorthand for {@link #build(Object)}.
+     * {@link BuildStrategy}).
+     * 
+     * @param <T> built type
+     * @param <R> {@link Blueprint.Root} type
+     * @param t   value
+     * @return R
+     */
+    public static <T, R extends Blueprint.Root<T, R>> R $(T t) {
+        return build(singleton(), () -> t);
+    }
+    
     private Cotterpin() {
     }
 }

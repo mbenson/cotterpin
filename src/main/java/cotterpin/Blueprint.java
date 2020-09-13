@@ -203,6 +203,30 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends Supplier<T> {
     }
 
     /**
+     * Shorthand for {@link #child(Supplier)}.
+     * 
+     * @param <X> value type
+     * @param <C> {@link Child} blueprint type
+     * @param c   child {@link Supplier}
+     * @return C
+     */
+    default <X, C extends Child<X, T, S, C>> C $(Supplier<X> c) {
+        return child(c);
+    }
+    
+    /**
+     * Shorthand for {@link #child(Object)}.
+     * 
+     * @param <X> value type
+     * @param <C> {@link Child} blueprint type
+     * @param c   child value
+     * @return C
+     */
+    default <X, C extends Child<X, T, S, C>> C $(X c) {
+        return child(() -> c);
+    }
+
+    /**
      * Obtain a blueprint for a child component of the specified {@code type}.
      * 
      * @param <X>  component type
@@ -221,6 +245,30 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends Supplier<T> {
      * @return M
      */
     <X, M extends Mutator<X, T, S, M>> M mutate(Class<X> type);
+
+    /**
+     * Shorthand for {@link #mutate(Typed)}.
+     * 
+     * @param <X>  component type
+     * @param <M>  fully parameterized {@link Mutator} type
+     * @param type
+     * @return M
+     */
+    default <X, M extends Mutator<X, T, S, M>> M __(Typed<X> type) {
+        return mutate(type);
+    }
+
+    /**
+     * Shorthand for {@link #mutate(Class)}.
+     * 
+     * @param <X>  component type
+     * @param <M>  fully parameterized {@link Mutator} type
+     * @param type
+     * @return M
+     */
+    default <X, M extends Mutator<X, T, S, M>> M __(Class<X> type) {
+        return mutate(type);
+    }
 
     /**
      * Add a step to the blueprint plan.
