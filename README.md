@@ -10,9 +10,9 @@ Cotterpin.build(Franchise::new)
 .get()
 ```
 
-Shorthand version:
+Shorthand version (using static import):
 ```
-Cotterpin.$(Franchise::new)
+$(Franchise::new)
     .$$("Psycho").onto(Franchise::setName)
 .get()
 ```
@@ -32,7 +32,7 @@ Cotterpin.build(Franchise::new)
 
 Shorthand version:
 ```
-Cotterpin.$(Franchise::new)
+$(Franchise::new)
     .$$("Evil Dead").onto(Franchise::setName)
     .$$(Character::new)
         .$$(CharacterType.UNDEAD).onto(Character::setType)
@@ -55,7 +55,7 @@ Cotterpin.build(Franchise::new)
 
 Shorthand version:
 ```
-Cotterpin.$(Franchise::new)
+$(Franchise::new)
     .$$("Nightmare on Elm Street").onto(Franchise::setName)
     .$$(Character::new)
         .$$(CharacterType.GHOST).onto(Character::setType)
@@ -75,7 +75,7 @@ Cotterpin.build(Franchise::new)
 
 Shorthand version:
 ```
-Cotterpin.$(Franchise::new)
+$(Franchise::new)
     .$$("Halloween").onto(Franchise::setName)
     .__(Franchise.Info.class)
         .$$(Year.of(1978)).onto(Franchise.Info::setOriginated)
@@ -96,7 +96,7 @@ Cotterpin.build(Franchise::new)
 
 Shorthand version:
 ```
-Cotterpin.$(Franchise::new)
+$(Franchise::new)
     .$$("Halloween").onto(Franchise::setName)
     .__(new TypeLiteral<Franchise.Info>() {})
         .$$(Year.of(1978)).onto(Franchise.Info::setOriginated)
