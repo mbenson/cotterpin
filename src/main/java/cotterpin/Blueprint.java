@@ -210,7 +210,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends Supplier<T> {
      * @param c   child {@link Supplier}
      * @return C
      */
-    default <X, C extends Child<X, T, S, C>> C $(Supplier<X> c) {
+    default <X, C extends Child<X, T, S, C>> C $$(Supplier<X> c) {
         return child(c);
     }
     
@@ -222,7 +222,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends Supplier<T> {
      * @param c   child value
      * @return C
      */
-    default <X, C extends Child<X, T, S, C>> C $(X c) {
+    default <X, C extends Child<X, T, S, C>> C $$(X c) {
         return child(() -> c);
     }
 

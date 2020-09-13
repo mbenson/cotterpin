@@ -72,7 +72,7 @@ public class ShorthandTest {
         assertThat(
         // @formatter:off
             Cotterpin.$(Franchise::new)
-                .$("Psycho").onto(Franchise::setName)
+                .$$("Psycho").onto(Franchise::setName)
             .get())
             // @formatter:on
                                 .hasFieldOrPropertyWithValue("name", "Psycho");
@@ -83,9 +83,9 @@ public class ShorthandTest {
         assertThat(
         // @formatter:off
         Cotterpin.$(Franchise::new)
-            .$("Nightmare on Elm Street").onto(Franchise::setName)
-            .$(Character::new)
-                .$(CharacterType.GHOST).onto(Character::setType)
+            .$$("Nightmare on Elm Street").onto(Franchise::setName)
+            .$$(Character::new)
+                .$$(CharacterType.GHOST).onto(Character::setType)
             .into(Franchise::getCharacters, ifNull(Franchise::setCharacters, TreeMap::new)).at("Freddy Krueger")
         .get())
         // @formatter:on
@@ -99,12 +99,12 @@ public class ShorthandTest {
         assertThat(
         // @formatter:off
         Cotterpin.$(Franchise::new)
-            .$("Evil Dead").onto(Franchise::setName)
-            .$(Character::new)
-                .$(CharacterType.UNDEAD).onto(Character::setType)
-                .$("Book").addTo(Character::getWeaknesses, ifNull(Character::setWeaknesses, LinkedHashSet<String>::new))
-                .$("Chainsaw").addTo(Character::getWeaknesses)
-                .$("Boomstick").addTo(Character::getWeaknesses)
+            .$$("Evil Dead").onto(Franchise::setName)
+            .$$(Character::new)
+                .$$(CharacterType.UNDEAD).onto(Character::setType)
+                .$$("Book").addTo(Character::getWeaknesses, ifNull(Character::setWeaknesses, LinkedHashSet<String>::new))
+                .$$("Chainsaw").addTo(Character::getWeaknesses)
+                .$$("Boomstick").addTo(Character::getWeaknesses)
             .into(Franchise::getCharacters, ifNull(Franchise::setCharacters, TreeMap::new)).at("Henrietta")
         .get())
         // @formatter:on
@@ -119,9 +119,9 @@ public class ShorthandTest {
         assertThat(
         // @formatter:off
         Cotterpin.$(Franchise::new)
-            .$("Halloween").onto(Franchise::setName)
+            .$$("Halloween").onto(Franchise::setName)
             .__(Franchise.Info.class)
-                .$(Year.of(1978)).onto(Franchise.Info::setOriginated)
+                .$$(Year.of(1978)).onto(Franchise.Info::setOriginated)
             .onto(Franchise::getInfo)
         .get())
         // @formatter:on
@@ -134,9 +134,9 @@ public class ShorthandTest {
         assertThat(
         // @formatter:off
         Cotterpin.$(Franchise::new)
-            .$("Halloween").onto(Franchise::setName)
+            .$$("Halloween").onto(Franchise::setName)
             .__(new TypeLiteral<Franchise.Info>() {})
-                .$(Year.of(1978)).onto(Franchise.Info::setOriginated)
+                .$$(Year.of(1978)).onto(Franchise.Info::setOriginated)
             .onto(Franchise::getInfo)
         .get())
         // @formatter:on
@@ -170,7 +170,7 @@ public class ShorthandTest {
         assertThat(
         // @formatter:off
         Cotterpin.$(Franchise::new)
-            .$("New Line").map(Optional::of).onto(Franchise::maybeSetStudio)
+            .$$("New Line").map(Optional::of).onto(Franchise::maybeSetStudio)
         .get()
         // @formatter:on
                         .getStudio()).isEqualTo("New Line");
@@ -183,7 +183,7 @@ public class ShorthandTest {
 
     @Test(expected = NullPointerException.class)
     public void testNullRootWithDefaultChildStrategy() {
-        Cotterpin.$((Franchise) null).$("").onto(Franchise::setName).get();
+        Cotterpin.$((Franchise) null).$$("").onto(Franchise::setName).get();
     }
 
     @Test
@@ -196,14 +196,14 @@ public class ShorthandTest {
     @Test
     public void testIgnoreNullValueStrategy() {
         Franchise franchise = Mockito.mock(Franchise.class);
-        Cotterpin.$(franchise).strategy(IGNORE_NULL_VALUE).$((String) null).onto(Franchise::setName).get();
+        Cotterpin.$(franchise).strategy(IGNORE_NULL_VALUE).$$((String) null).onto(Franchise::setName).get();
         Mockito.verify(franchise, never()).setName(null);
     }
 
     @Test
     public void testRestoreDefaultStrategy() {
         Franchise franchise = Mockito.mock(Franchise.class);
-        Cotterpin.$(franchise).strategy(IGNORE_NULL_VALUE).$((String) null).strategy(DEFAULT).onto(Franchise::setName)
+        Cotterpin.$(franchise).strategy(IGNORE_NULL_VALUE).$$((String) null).strategy(DEFAULT).onto(Franchise::setName)
                 .get();
         Mockito.verify(franchise, times(1)).setName(null);
     }
@@ -214,7 +214,7 @@ public class ShorthandTest {
             Cotterpin.$((Character) null)
             //@formatter:off
                 .strategy(IGNORE_NULL_PARENT)
-                .$(CharacterType.ALIEN).strategy(DEFAULT, IGNORE_NULL_VALUE)
+                .$$(CharacterType.ALIEN).strategy(DEFAULT, IGNORE_NULL_VALUE)
                 .onto(Character::setType)
                 //@formatter:on
                     .get();
