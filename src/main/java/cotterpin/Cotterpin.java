@@ -322,7 +322,6 @@ public class Cotterpin {
         return build(singleton(), () -> t);
     }
 
-    
     /**
      * Shorthand for {@link #build(Supplier)}.
      * 
@@ -334,7 +333,7 @@ public class Cotterpin {
     public static <T, R extends Blueprint.Root<T, R>> R $(Supplier<T> t) {
         return build(singleton(), t);
     }
-    
+
     /**
      * Shorthand for {@link #build(BuildStrategy, Supplier)}.
      * 
@@ -349,7 +348,7 @@ public class Cotterpin {
     public static <T, R extends Blueprint.Root<T, R>> R $(BuildStrategy<T> strategy, Supplier<T> t) {
         return (R) new RootImpl<>(strategy, t);
     }
-    
+
     /**
      * Shorthand for {@link #build(Object)}.
      * {@link BuildStrategy}).
@@ -362,7 +361,7 @@ public class Cotterpin {
     public static <T, R extends Blueprint.Root<T, R>> R $(T t) {
         return build(singleton(), () -> t);
     }
-    
+
     private Cotterpin() {
     }
 }
