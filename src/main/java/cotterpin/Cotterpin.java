@@ -167,16 +167,22 @@ public class Cotterpin {
                 final Function<U, M> m = strategy.apply((Function<U, M>) map);
                 return new IntoMapImpl<>(this, m, parent, children.current);
             } finally {
-                parent = null;
+                close();
             }
         }
 
         @Override
         public <TT, SS extends Child<TT, U, P, SS>> SS map(Function<? super T, ? extends TT> xform) {
-            @SuppressWarnings({ "unchecked", "rawtypes" })
-            final SS result = (SS) new ChildImpl(buildStrategy.child(), () -> xform.apply(get()), parent,
-                    children.current);
-            return result;
+            ensureOpen();
+            try {
+                @SuppressWarnings({ "unchecked", "rawtypes" })
+                final SS result = (SS) new ChildImpl(buildStrategy.child(), () -> xform.apply(get()), parent,
+                        children.current);
+                return result;
+            } finally {
+                close();
+            }
+        }
 
         @Override
         public T get() {
@@ -236,6 +242,7 @@ public class Cotterpin {
 
         @Override
         public P onto(Function<? super U, ? extends T> prop, ComponentStrategy<U, T> strategy) {
+            Validate.validState(parent != null);
             parent.then(p -> {
                 @SuppressWarnings("unchecked")
                 final Function<U, T> x = strategy.apply((Function<U, T>) prop);
