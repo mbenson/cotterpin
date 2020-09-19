@@ -74,11 +74,6 @@ public class Cotterpin {
             children = new ChildStrategyManager(childStrategy);
         }
 
-        @Override
-        public T get() {
-            return buildStrategy.get();
-        }
-
         @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
         public <X, C extends Child<X, T, S, C>> C child(Supplier<X> c) {
@@ -125,6 +120,11 @@ public class Cotterpin {
             final SS result = (SS) new RootImpl(buildStrategy.child(),
                     () -> Objects.requireNonNull(xform).apply(get()));
             return result;
+        }
+
+        @Override
+        public T get() {
+            return buildStrategy.get();
         }
     }
 
@@ -177,6 +177,10 @@ public class Cotterpin {
             final SS result = (SS) new ChildImpl(buildStrategy.child(), () -> xform.apply(get()), parent,
                     children.current);
             return result;
+
+        @Override
+        public T get() {
+            return buildStrategy.get();
         }
 
         private void ensureOpen() {
@@ -243,11 +247,6 @@ public class Cotterpin {
             } finally {
                 parent = null;
             }
-        }
-
-        @Override
-        public T get() {
-            throw new UnsupportedOperationException();
         }
     }
 

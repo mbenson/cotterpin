@@ -30,14 +30,14 @@ import org.apache.commons.lang3.reflect.Typed;
  * @param <T> built type
  * @param <S> self type
  */
-public interface Blueprint<T, S extends Blueprint<T, S>> extends Supplier<T> {
+public interface Blueprint<T, S extends Blueprint<T, S>> {
     /**
      * Root Blueprint type.
      *
      * @param <T>
      * @param <S>
      */
-    public interface Root<T, S extends Root<T, S>> extends Blueprint<T, S> {
+    public interface Root<T, S extends Root<T, S>> extends Blueprint<T, S>, Supplier<T> {
 
         /**
          * Transform this {@link Blueprint}.
@@ -58,7 +58,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends Supplier<T> {
      * @param <P> parent blueprint type
      * @param <S> self type
      */
-    public interface Child<T, U, P extends Blueprint<U, P>, S extends Child<T, U, P, S>> extends Blueprint<T, S> {
+    public interface Child<T, U, P extends Blueprint<U, P>, S extends Child<T, U, P, S>> extends Blueprint<T, S>, Supplier<T> {
 
         /**
          * Apply the supplied value to the parent using the specified {@code mutator}.
