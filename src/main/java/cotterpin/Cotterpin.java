@@ -129,7 +129,7 @@ public class Cotterpin {
     }
 
     private static class ChildImpl<T, U, P extends BlueprintImpl<U, P>, S extends ChildImpl<T, U, P, S>>
-            extends BlueprintImpl<T, S> implements Child<T, U, P, S> {
+            extends BlueprintImpl<T, S> implements Child<T, U, P, S>, Supplier<T> {
 
         P parent;
 

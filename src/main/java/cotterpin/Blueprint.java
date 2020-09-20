@@ -58,7 +58,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
      * @param <P> parent blueprint type
      * @param <S> self type
      */
-    public interface Child<T, U, P extends Blueprint<U, P>, S extends Child<T, U, P, S>> extends Blueprint<T, S>, Supplier<T> {
+    public interface Child<T, U, P extends Blueprint<U, P>, S extends Child<T, U, P, S>> extends Blueprint<T, S> {
 
         /**
          * Apply the supplied value to the parent using the specified {@code mutator}.
