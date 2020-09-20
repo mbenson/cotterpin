@@ -160,24 +160,24 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
 
         /**
          * Apply the configured mutations onto the component obtained using
-         * {@code prop}.
+         * {@code accessor}.
          * 
-         * @param prop {@link Function}
+         * @param accessor {@link Function}
          * @return parent blueprint
          */
-        default P onto(Function<? super U, ? extends T> prop) {
-            return onto(prop, ComponentStrategy.noop());
+        default P onto(Function<? super U, ? extends T> accessor) {
+            return onto(accessor, ComponentStrategy.noop());
         }
 
         /**
          * Apply the configured mutations onto the component obtained using
-         * {@code prop}, with component strategy.
+         * {@code accessor}, with component strategy.
          * 
-         * @param prop     {@link Function}
+         * @param accessor     {@link Function}
          * @param strategy to apply
          * @return parent blueprint
          */
-        P onto(Function<? super U, ? extends T> prop, ComponentStrategy<U, T> strategy);
+        P onto(Function<? super U, ? extends T> accessor, ComponentStrategy<U, T> strategy);
     }
 
     /**

@@ -241,11 +241,11 @@ public class Cotterpin {
         }
 
         @Override
-        public P onto(Function<? super U, ? extends T> prop, ComponentStrategy<U, T> strategy) {
+        public P onto(Function<? super U, ? extends T> accessor, ComponentStrategy<U, T> strategy) {
             Validate.validState(parent != null);
             parent.then(p -> {
                 @SuppressWarnings("unchecked")
-                final Function<U, T> x = strategy.apply((Function<U, T>) prop);
+                final Function<U, T> x = strategy.apply((Function<U, T>) accessor);
                 ((MutatorStrategy<T>) buildStrategy).delegate.initialize(() -> x.apply(p));
                 buildStrategy.get();
             });
