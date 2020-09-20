@@ -1,5 +1,5 @@
 # cotterpin
-Java object builder
+Functional Fluent Java Object Graph Builder
 
 Building a Java object graph, particularly of Java beans, is annoying and verbose. Fluent builders are better, but require the creation or generation of custom code for the purpose. Cotterpin provides a fluent interface to emulate a similar experience using Java 8 functors.
 

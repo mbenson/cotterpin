@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project xmlns="http://maven.apache.org/DECORATION/1.8.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/DECORATION/1.8.0 https://maven.apache.org/xsd/decoration-1.8.0.xsd"
+  name="Cotterpin">
+  <skin>
+    <groupId>org.apache.maven.skins</groupId>
+    <artifactId>maven-fluido-skin</artifactId>
+    <version>1.9</version>
+  </skin>
+  <custom>
+    <fluidoSkin>
+      <topBarEnabled>true</topBarEnabled>
+      <navBarStyle>navbar-inverse</navBarStyle>
+      <sideBarEnabled>false</sideBarEnabled>
+      <topBarIcon>
+        <name>Cotterpin</name>
+	<src>/images/helmet.png</src>
+        <href>/index.html</href>
+      </topBarIcon>
+      <gitHub>
+        <projectId>mbenson/cotterpin</projectId>
+        <ribbonOrientation>right</ribbonOrientation>
+        <ribbonColor>black</ribbonColor>
+      </gitHub>
+    </fluidoSkin>
+  </custom>
+  <!--bannerLeft>
+    <name>Cotterpin</name>
+    <src>https://github.com/mbenson/cotterpin</src>
+    <href>https://mbenson.github.io/cotterpin/</href>
+  </bannerLeft-->
+  <body>
+    <!--menu name="Cotterpin">
+      <item name="Introduction" href="index.html" />
+    </menu-->
+    <menu ref="reports" />
+    <footer><![CDATA[
+    <div>Icons made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>]]>
+    </footer>
+  </body>
+</project>
