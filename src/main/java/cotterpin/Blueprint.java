@@ -173,7 +173,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
          * Apply the configured mutations onto the component obtained using
          * {@code accessor}, with component strategy.
          * 
-         * @param accessor     {@link Function}
+         * @param accessor {@link Function}
          * @param strategy to apply
          * @return parent blueprint
          */
@@ -213,7 +213,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
     default <X, C extends Child<X, T, S, C>> C $$(Supplier<X> c) {
         return child(c);
     }
-    
+
     /**
      * Shorthand for {@link #child(Object)}.
      * 
@@ -224,6 +224,30 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
      */
     default <X, C extends Child<X, T, S, C>> C $$(X c) {
         return child(() -> c);
+    }
+
+    /**
+     * Obtain a child blueprint with a {@code null} value, avoiding casts.
+     * 
+     * @param <X>  value type
+     * @param <C>  {@link Child} blueprint type
+     * @param type
+     * @return C
+     */
+    default <X, C extends Child<X, T, S, C>> C nul(Typed<X> type) {
+        return child(() -> null);
+    }
+
+    /**
+     * Obtain a child blueprint with a {@code null} value, avoiding casts.
+     * 
+     * @param <X>  value type
+     * @param <C>  {@link Child} blueprint type
+     * @param type
+     * @return C
+     */
+    default <X, C extends Child<X, T, S, C>> C nul(Class<X> type) {
+        return child(() -> null);
     }
 
     /**

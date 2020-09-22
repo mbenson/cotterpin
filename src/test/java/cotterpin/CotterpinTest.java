@@ -24,6 +24,7 @@ import static org.mockito.Mockito.times;
 
 import java.time.Year;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Supplier;
@@ -176,6 +177,28 @@ public class CotterpinTest {
     @Test
     public void testNull() {
         Assertions.assertThat(Cotterpin.build(() -> null).get()).isNull();
+    }
+
+    @Test
+    public void testNullChild() {
+        assertThat(
+        // @formatter:off
+        Cotterpin.build(Franchise::new)
+            .nul(String.class).onto(Franchise::setName)
+        .get()
+        // @formatter:on
+        .getName()).isNull();
+    }
+
+    @Test
+    public void testParameterizedNullChild() {
+        assertThat(
+        // @formatter:off
+        Cotterpin.build(Franchise::new)
+            .nul(new TypeLiteral<Map<String,Character>>() {}).onto(Franchise::setCharacters)
+        .get().getCharacters()
+        // @formatter:on
+        ).isNull();
     }
 
     @Test(expected = NullPointerException.class)
