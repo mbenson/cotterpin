@@ -357,7 +357,6 @@ public class Cotterpin {
 
     /**
      * Shorthand for {@link #build(Object)}.
-     * {@link BuildStrategy}).
      * 
      * @param <T> built type
      * @param <R> {@link Blueprint.Root} type
