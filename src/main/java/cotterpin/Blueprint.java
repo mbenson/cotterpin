@@ -51,6 +51,203 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
     }
 
     /**
+     * Blueprint of {@link Collection}.
+     *
+     * @param <E> element type
+     * @param <C> {@link Collection} type
+     * @param <S> self type
+     */
+    public interface OfCollection<E, C extends Collection<E>, S extends OfCollection<E, C, S>> extends Supplier<C> {
+
+        /**
+         * Obtain a blueprint for a directly-specified element.
+         * 
+         * @param <R> {@link OfCollectionElement} type
+         * @param e   element
+         * @return R
+         */
+        default <R extends OfCollectionElement<E, C, S, R>> R element(E e) {
+            return element(() -> e);
+        }
+
+        /**
+         * Obtain a blueprint for a {@link Collection} element.
+         * 
+         * @param <R> {@link OfCollectionElement} type
+         * @param e   element {@link Supplier}
+         * @return R
+         */
+        <R extends OfCollectionElement<E, C, S, R>> R element(Supplier<E> e);
+
+        /**
+         * Shorthand for {@link #element(Supplier)}.
+         * 
+         * @param <R> {@link OfCollectionElement} type
+         * @param e   element {@link Supplier}
+         * @return R
+         */
+        default <R extends OfCollectionElement<E, C, S, R>> R $$(Supplier<E> e) {
+            return element(e);
+        }
+
+        /**
+         * Shorthand for {@link #element(Object)}
+         * 
+         * @param <R> {@link OfCollectionElement} type
+         * @param e   element
+         * @return R
+         */
+        default <R extends OfCollectionElement<E, C, S, R>> R $$(E e) {
+            return element(() -> e);
+        }
+
+        /**
+         * Shorthand syntax for {@code null} {@link #element(Object)}.
+         * 
+         * @param <R>
+         * @return R
+         */
+        default <R extends OfCollectionElement<E, C, S, R>> R nul() {
+            return element(() -> null);
+        }
+
+        /**
+         * Add a step to the blueprint plan.
+         * 
+         * @param mutation which will be applied
+         * @return {@code this}, fluently
+         */
+        S then(Consumer<? super C> mutation);
+
+        /**
+         * In conjunction with inherited strategies (where applicable), apply the
+         * specified {@link ChildStrategy} set from this point onward until and unless
+         * this method is called again.
+         * 
+         * @param childStrategies
+         * @return {@code this}, fluently
+         */
+        S strategy(ChildStrategy... strategies);
+    }
+
+    /**
+     * Blueprint of {@link Collection} element.
+     *
+     * @param <E> element type
+     * @param <C> {@link Collection} type
+     * @param <P> parent type
+     * @param <S> self type
+     */
+    public interface OfCollectionElement<E, C extends Collection<E>, P extends OfCollection<E, C, P>, S extends OfCollectionElement<E, C, P, S>>
+            extends Blueprint<E, S> {
+
+        /**
+         * Add the built element to the hosted {@link Collection}
+         * 
+         * @return parent blueprint, fluently
+         */
+        P add();
+    }
+
+    /**
+     * Blueprint of {@link Map}.
+     *
+     * @param <K> key type
+     * @param <V> value type
+     * @param <M> {@link Map} type
+     * @param <S> self type
+     */
+    public interface OfMap<K, V, M extends Map<K, V>, S extends OfMap<K, V, M, S>> extends Supplier<M> {
+
+        /**
+         * Obtain a blueprint for a {@link Map} entry (via its value).
+         * 
+         * @param <R> {@link OfMapEntry} type
+         * @param v   value {@link Supplier}
+         * @return R
+         */
+        <R extends OfMapEntry<K, V, M, S, R>> R value(Supplier<V> v);
+
+        /**
+         * Obtain a blueprint for a {@link Map} entry (via directly-specified value).
+         * 
+         * @param <R>
+         * @param v   value
+         * @return R
+         */
+        <R extends OfMapEntry<K, V, M, S, R>> R value(V v);
+
+        /**
+         * Shorthand for {@link #value(Supplier)}.
+         * 
+         * @param <R>
+         * @param v   value {@link Supplier}
+         * @return R
+         */
+        default <R extends OfMapEntry<K, V, M, S, R>> R $$(Supplier<V> v) {
+            return value(v);
+        }
+
+        /**
+         * Shorthand for {@link #value(Object)}.
+         * 
+         * @param <R>
+         * @param v   value
+         * @return R
+         */
+        default <R extends OfMapEntry<K, V, M, S, R>> R $$(V v) {
+            return value(() -> v);
+        }
+
+        /**
+         * Shorthand syntax for {@code null} {@link #value(Object)}.
+         * 
+         * @param <R>
+         * @return R
+         */
+        <R extends OfMapEntry<K, V, M, S, R>> R nul();
+
+        /**
+         * Add a step to the blueprint plan.
+         * 
+         * @param mutation which will be applied
+         * @return {@code this}, fluently
+         */
+        S then(Consumer<? super M> mutation);
+
+        /**
+         * In conjunction with inherited strategies (where applicable), apply the
+         * specified {@link ChildStrategy} set from this point onward until and unless
+         * this method is called again.
+         * 
+         * @param childStrategies
+         * @return {@code this}, fluently
+         */
+        S strategy(ChildStrategy... strategies);
+    }
+
+    /**
+     * Blueprint of {@link Map} entry.
+     *
+     * @param <K>
+     * @param <V>
+     * @param <M>
+     * @param <P>
+     * @param <S>
+     */
+    public interface OfMapEntry<K, V, M extends Map<K, V>, P extends OfMap<K, V, M, P>, S extends OfMapEntry<K, V, M, P, S>>
+            extends Blueprint<V, S> {
+
+        /**
+         * Put the built value into the hosted {@link Map} at {@code key}.
+         * 
+         * @param key
+         * @return parent blueprint, fluently
+         */
+        P at(K key);
+    }
+
+    /**
      * Blueprint for an object subordinate to the graph root.
      *
      * @param <T> built type
