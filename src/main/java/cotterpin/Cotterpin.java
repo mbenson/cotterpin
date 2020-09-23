@@ -128,6 +128,145 @@ public class Cotterpin {
         }
     }
 
+    private static class OfCollectionImpl<E, C extends Collection<E>, S extends OfCollectionImpl<E, C, S>>
+            implements Blueprint.OfCollection<E, C, S> {
+        final BuildStrategy<C> buildStrategy;
+        final ChildStrategyManager children = new ChildStrategyManager(ChildStrategy.DEFAULT);
+
+        OfCollectionImpl(BuildStrategy<C> buildStrategy, Supplier<C> c) {
+            this.buildStrategy = buildStrategy;
+            buildStrategy.initialize(c);
+        }
+
+        @Override
+        public C get() {
+            return buildStrategy.get();
+        }
+
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        @Override
+        public <R extends Blueprint.OfCollectionElement<E, C, S, R>> R element(Supplier<E> e) {
+            return (R) new OfCollectionElementImpl(buildStrategy.child(), e, (S) this, children.current);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public S then(Consumer<? super C> mutation) {
+            buildStrategy.apply(mutation);
+            return (S) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public S strategy(ChildStrategy... strategies) {
+            children.adopt(strategies);
+            return (S) this;
+        }
+    }
+
+    private static class OfCollectionElementImpl<E, C extends Collection<E>, P extends Blueprint.OfCollection<E, C, P>, S extends OfCollectionElementImpl<E, C, P, S>>
+            extends BlueprintImpl<E, S> implements Blueprint.OfCollectionElement<E, C, P, S>, Supplier<E> {
+
+        P parent;
+
+        OfCollectionElementImpl(BuildStrategy<E> buildStrategy, Supplier<E> target, P parent,
+                ChildStrategy childStrategy) {
+            super(buildStrategy, target, childStrategy);
+            this.parent = parent;
+        }
+
+        @Override
+        public P add() {
+            Validate.validState(parent != null);
+            try {
+                BiConsumer<C, E> add = Collection::add;
+                parent.then(c -> children.apply(add).accept(c, get()));
+                return parent;
+            } finally {
+                parent = null;
+            }
+        }
+
+        @Override
+        public E get() {
+            return buildStrategy.get();
+        }
+    }
+
+    private static class OfMapImpl<K, V, M extends Map<K, V>, S extends OfMapImpl<K, V, M, S>>
+            implements Blueprint.OfMap<K, V, M, S> {
+        final BuildStrategy<M> buildStrategy;
+        final ChildStrategyManager children = new ChildStrategyManager(ChildStrategy.DEFAULT);
+
+        OfMapImpl(BuildStrategy<M> buildStrategy, Supplier<M> m) {
+            this.buildStrategy = buildStrategy;
+            buildStrategy.initialize(m);
+        }
+
+        @Override
+        public M get() {
+            return buildStrategy.get();
+        }
+
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        @Override
+        public <R extends Blueprint.OfMapEntry<K, V, M, S, R>> R value(Supplier<V> v) {
+            return (R) new OfMapEntryImpl(buildStrategy.child(), v, (S) this, children.current);
+        }
+
+        @Override
+        public <R extends Blueprint.OfMapEntry<K, V, M, S, R>> R value(V v) {
+            return value(() -> v);
+        }
+
+        @Override
+        public <R extends Blueprint.OfMapEntry<K, V, M, S, R>> R nul() {
+            return value(() -> null);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public S then(Consumer<? super M> mutation) {
+            buildStrategy.apply(mutation);
+            return (S) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public S strategy(ChildStrategy... strategies) {
+            children.adopt(strategies);
+            return (S) this;
+        }
+    }
+
+    private static class OfMapEntryImpl<K, V, M extends Map<K, V>, P extends Blueprint.OfMap<K, V, M, P>, S extends OfMapEntryImpl<K, V, M, P, S>>
+            extends BlueprintImpl<V, S> implements Blueprint.OfMapEntry<K, V, M, P, S>, Supplier<V> {
+
+        P parent;
+
+        OfMapEntryImpl(BuildStrategy<V> buildStrategy, Supplier<V> target, P parent, ChildStrategy childStrategy) {
+            super(buildStrategy, target, childStrategy);
+            this.parent = parent;
+        }
+
+        @Override
+        public P at(K key) {
+            Validate.validState(parent != null);
+            try {
+                BiConsumer<M, V> put = (m, v) -> m.put(key, v);
+                parent.then(m -> children.apply(put).accept(m, get()));
+                return parent;
+            } finally {
+                parent = null;
+            }
+        }
+
+        @Override
+        public V get() {
+            return buildStrategy.get();
+        }
+    }
+
     private static class ChildImpl<T, U, P extends BlueprintImpl<U, P>, S extends ChildImpl<T, U, P, S>>
             extends BlueprintImpl<T, S> implements Child<T, U, P, S>, Supplier<T> {
 
@@ -367,6 +506,188 @@ public class Cotterpin {
         return build(singleton(), () -> t);
     }
 
+//    /**
+//     * Begin to build a (root) {@link Collection} blueprint (implicit singleton
+//     * strategy).
+//     * 
+//     * @param <E> element type
+//     * @param <C> built type
+//     * @param <R> {@link Blueprint.OfCollection} type
+//     * @param c   value
+//     * @return R
+//     */
+//    public static <E, C extends Collection<E>, R extends Blueprint.OfCollection<E, C, R>> R buildCollection(C c) {
+//        return buildCollection(singleton(), () -> c);
+//    }
+
+    /**
+     * Begin to build a (root) {@link Collection} blueprint (implicit singleton
+     * strategy). NOTE: an apparent OpenJDK bug prevents an overloaded (C) signature
+     * from being properly differentiated from this method.
+     * 
+     * @param <E> element type
+     * @param <C> built type
+     * @param <R> {@link Blueprint.OfCollection} type
+     * @param c   value {@link Supplier}
+     * @return R
+     */
+    @SuppressWarnings("unchecked")
+    public static <E, C extends Collection<E>, R extends Blueprint.OfCollection<E, C, R>> R buildCollection(
+            Supplier<C> c) {
+        return (R) new OfCollectionImpl<>(singleton(), c);
+    }
+
+    /**
+     * Begin to build a (root) {@link Collection} blueprint.
+     * 
+     * @param <E>      element type
+     * @param <C>      built type
+     * @param <R>      {@link Blueprint.OfCollection} type
+     * @param strategy
+     * @param c        value {@link Supplier}
+     * @return R
+     */
+    @SuppressWarnings("unchecked")
+    public static <E, C extends Collection<E>, R extends Blueprint.OfCollection<E, C, R>> R buildCollection(
+            BuildStrategy<C> strategy, Supplier<C> c) {
+        return (R) new OfCollectionImpl<>(strategy, c);
+    }
+
+//    /**
+//     * Shorthand for {@link #buildCollection(Collection)}.
+//     * 
+//     * @param <E> element type
+//     * @param <C> built type
+//     * @param <R> {@link Blueprint.OfCollection} type
+//     * @param c   value
+//     * @return R
+//     */
+//    public static <E, C extends Collection<E>, R extends Blueprint.OfCollection<E, C, R>> R c$(C c) {
+//        return buildCollection(c);
+//    }
+
+    /**
+     * Shorthand for {@link #buildCollection(Supplier)}.
+     * 
+     * @param <E> element type
+     * @param <C> built type
+     * @param <R> {@link Blueprint.OfCollection} type
+     * @param c   value {@link Supplier}
+     * @return R
+     */
+    @SuppressWarnings("unchecked")
+    public static <E, C extends Collection<E>, R extends Blueprint.OfCollection<E, C, R>> R c$(Supplier<C> c) {
+        return (R) new OfCollectionImpl<>(singleton(), c);
+    }
+
+    /**
+     * Shorthand for {@link #buildCollection(BuildStrategy, Supplier)}.
+     * 
+     * @param <E>      element type
+     * @param <C>      built type
+     * @param <R>      {@link Blueprint.OfCollection} type
+     * @param strategy build strategy
+     * @param c        value {@link Supplier}
+     * @return R
+     */
+    @SuppressWarnings("unchecked")
+    public static <E, C extends Collection<E>, R extends Blueprint.OfCollection<E, C, R>> R c$(
+            BuildStrategy<C> strategy, Supplier<C> c) {
+        return (R) new OfCollectionImpl<>(strategy, c);
+    }
+
+    /**
+     * Begin to build a (root) {@link Map} blueprint.
+     * 
+     * @param <K>      key type
+     * @param <V>      value type
+     * @param <M>      {@link Map} type
+     * @param <R>      {@link Blueprint.OfMap} type
+     * @param strategy build strategy
+     * @param m        value {@link Supplier}
+     * @return R
+     */
+    @SuppressWarnings("unchecked")
+    public static <K, V, M extends Map<K, V>, R extends Blueprint.OfMap<K, V, M, R>> R buildMap(
+            BuildStrategy<M> strategy, Supplier<M> m) {
+        return (R) new OfMapImpl<>(strategy, m);
+    }
+
+    /**
+     * Begin to build a (root) {@link Map} blueprint (implicit singleton strategy).
+     * NOTE: an apparent OpenJDK bug prevents an overloaded (M) signature from being
+     * properly differentiated from this method.
+     * 
+     * @param <K> key type
+     * @param <V> value type
+     * @param <M> {@link Map} type
+     * @param <R> {@link Blueprint.OfMap} type
+     * @param m   value {@link Supplier}
+     * @return R
+     */
+    public static <K, V, M extends Map<K, V>, R extends Blueprint.OfMap<K, V, M, R>> R buildMap(Supplier<M> m) {
+        return buildMap(singleton(), m);
+    }
+
+//    /**
+//     * Begin to build a (root) {@link Map} blueprint (implicit singleton strategy).
+//     * 
+//     * @param <K> key type
+//     * @param <V> value type
+//     * @param <M> {@link Map} type
+//     * @param <R> {@link Blueprint.OfMap} type
+//     * @param m   value
+//     * @return R
+//     */
+//    public static <K, V, M extends Map<K, V>, R extends Blueprint.OfMap<K, V, M, R>> R buildMap(M m) {
+//        return buildMap(singleton(), () -> m);
+//    }
+//
+    /**
+     * Shorthand for {@link #buildMap(BuildStrategy, Supplier)}.
+     * 
+     * @param <K>      key type
+     * @param <V>      value type
+     * @param <M>      {@link Map} type
+     * @param <R>      {@link Blueprint.OfMap} type
+     * @param strategy build strategy
+     * @param m        value {@link Supplier}
+     * @return R
+     */
+    @SuppressWarnings("unchecked")
+    public static <K, V, M extends Map<K, V>, R extends Blueprint.OfMap<K, V, M, R>> R m$(BuildStrategy<M> strategy,
+            Supplier<M> m) {
+        return (R) new OfMapImpl<>(strategy, m);
+    }
+
+    /**
+     * Shorthand for {@link #buildMap(Supplier)}.
+     * 
+     * @param <K> key type
+     * @param <V> value type
+     * @param <M> {@link Map} type
+     * @param <R> {@link Blueprint.OfMap} type
+     * @param m   value {@link Supplier}
+     * @return R
+     */
+    public static <K, V, M extends Map<K, V>, R extends Blueprint.OfMap<K, V, M, R>> R m$(Supplier<M> m) {
+        return buildMap(singleton(), m);
+    }
+
+//    /**
+//     * Shorthand for {@link #buildMap(Map)}.
+//     * 
+//     * @param <K> key type
+//     * @param <V> value type
+//     * @param <M> {@link Map} type
+//     * @param <R> {@link Blueprint.OfMap} type
+//     * @param m   value
+//     * @return R
+//     */
+//    public static <K, V, M extends Map<K, V>, R extends Blueprint.OfMap<K, V, M, R>> R m$(M m) {
+//        return buildMap(singleton(), () -> m);
+//    }
+//
     private Cotterpin() {
     }
 }

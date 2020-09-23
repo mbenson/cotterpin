@@ -104,3 +104,70 @@ $(Franchise::new)
 .get()
 ```
 
+### cast-less `null` child:
+```
+Cotterpin.build(Franchise::new)
+    .nul(String.class).onto(Franchise::setName)
+.get()
+```
+
+### root `Collection`
+```
+Cotterpin.buildCollection(() -> new ArrayList<Character>())
+    .element(Character::new)
+        .child(CharacterType.ALIEN).onto(Character::setType)
+    .add()
+    .element(Character::new)
+        .child(CharacterType.DEMON).onto(Character::setType)
+    .add()
+    .element(Character::new)
+        .child(CharacterType.GHOST).onto(Character::setType)
+    .add()
+.get()
+```
+
+Shorthand version:
+```
+c$(() -> new ArrayList<Character>())
+    .$$(Character::new)
+        .$$(CharacterType.ALIEN).onto(Character::setType)
+    .add()
+    .$$(Character::new)
+        .$$(CharacterType.DEMON).onto(Character::setType)
+    .add()
+    .$$(Character::new)
+        .$$(CharacterType.GHOST).onto(Character::setType)
+    .add()
+.get()
+```
+
+### root `Map`
+```
+Cotterpin.buildMap(() -> new LinkedHashMap<String, Character>())
+    .value(Character::new)
+        .child(CharacterType.GOLEM).onto(Character::setType)
+    .at("Blade")
+    .value(Character::new)
+        .child(CharacterType.GOLEM).onto(Character::setType)
+    .at("Pinhead")
+    .value(Character::new)
+        .child(CharacterType.GOLEM).onto(Character::setType)
+    .at("Jester")
+.get()
+```
+
+Shorthand version:
+```
+m$(() -> new LinkedHashMap<String, Character>())
+    .$$(Character::new)
+        .$$(CharacterType.GOLEM).onto(Character::setType)
+    .at("Blade")
+    .$$(Character::new)
+        .$$(CharacterType.GOLEM).onto(Character::setType)
+    .at("Pinhead")
+    .$$(Character::new)
+        .$$(CharacterType.GOLEM).onto(Character::setType)
+    .at("Jester")
+.get()
+```
+

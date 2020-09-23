@@ -19,10 +19,13 @@ import static cotterpin.BuildStrategy.prototype;
 import static cotterpin.BuildStrategy.singleton;
 import static cotterpin.ComponentStrategy.ifNull;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 import java.time.Year;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -187,7 +190,7 @@ public class CotterpinTest {
             .nul(String.class).onto(Franchise::setName)
         .get()
         // @formatter:on
-        .getName()).isNull();
+                        .getName()).isNull();
     }
 
     @Test
@@ -195,7 +198,7 @@ public class CotterpinTest {
         assertThat(
         // @formatter:off
         Cotterpin.build(Franchise::new)
-            .nul(new TypeLiteral<Map<String,Character>>() {}).onto(Franchise::setCharacters)
+            .nul(new TypeLiteral<Map<String, Character>>() {}).onto(Franchise::setCharacters)
         .get().getCharacters()
         // @formatter:on
         ).isNull();
@@ -208,7 +211,7 @@ public class CotterpinTest {
 
     @Test
     public void testIgnoreNullParentStrategy() {
-        Assertions.assertThat(Cotterpin.build((Franchise) null).strategy(ChildStrategy.IGNORE_NULL_PARENT).child("")
+        assertThat(Cotterpin.build((Franchise) null).strategy(ChildStrategy.IGNORE_NULL_PARENT).child("")
                 .onto(Franchise::setName).get()).isNull();
     }
 
@@ -230,7 +233,7 @@ public class CotterpinTest {
 
     @Test
     public void testResetStrategy() {
-        Assertions.assertThatThrownBy(() -> {
+        assertThatThrownBy(() -> {
             Cotterpin.build((Character) null)
             //@formatter:off
                 .strategy(ChildStrategy.IGNORE_NULL_PARENT)
@@ -239,5 +242,46 @@ public class CotterpinTest {
                 //@formatter:on
                     .get();
         }).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void testRootCollection() {
+        assertThat(
+        //@formatter:off
+            Cotterpin.buildCollection(() -> new ArrayList<Character>())
+                .element(Character::new)
+                    .child(CharacterType.ALIEN).onto(Character::setType)
+                .add()
+                .element(Character::new)
+                    .child(CharacterType.DEMON).onto(Character::setType)
+                .add()
+                .element(Character::new)
+                    .child(CharacterType.GHOST).onto(Character::setType)
+                .add()
+            .get()
+        //@formatter:on
+        ).extracting(Character::getType).containsExactly(CharacterType.ALIEN, CharacterType.DEMON, CharacterType.GHOST);
+    }
+
+    @Test
+    public void testRootMap() {
+        assertThat(
+        //@formatter:off
+            Cotterpin.buildMap(() -> new LinkedHashMap<String, Character>())
+                .value(Character::new)
+                    .child(CharacterType.GOLEM).onto(Character::setType)
+                .at("Blade")
+                .value(Character::new)
+                    .child(CharacterType.GOLEM).onto(Character::setType)
+                .at("Pinhead")
+                .value(Character::new)
+                    .child(CharacterType.GOLEM).onto(Character::setType)
+                .at("Jester")
+            .get()
+        //@formatter:on
+        ).satisfies(m -> {
+            assertThat(m.keySet()).containsExactly("Blade", "Pinhead", "Jester");
+            assertThat(m.values()).extracting(Character::getType).allSatisfy(CharacterType.GOLEM::equals);
+        });
     }
 }

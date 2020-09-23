@@ -22,11 +22,15 @@ import static cotterpin.ChildStrategy.IGNORE_NULL_PARENT;
 import static cotterpin.ChildStrategy.IGNORE_NULL_VALUE;
 import static cotterpin.ComponentStrategy.ifNull;
 import static cotterpin.Cotterpin.$;
+import static cotterpin.Cotterpin.c$;
+import static cotterpin.Cotterpin.m$;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 import java.time.Year;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -220,5 +224,46 @@ public class ShorthandTest {
                 //@formatter:on
                     .get();
         }).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void testRootCollection() {
+        assertThat(
+        //@formatter:off
+            c$(() -> new ArrayList<Character>())
+                .$$(Character::new)
+                    .$$(CharacterType.ALIEN).onto(Character::setType)
+                .add()
+                .$$(Character::new)
+                    .$$(CharacterType.DEMON).onto(Character::setType)
+                .add()
+                .$$(Character::new)
+                    .$$(CharacterType.GHOST).onto(Character::setType)
+                .add()
+            .get()
+        //@formatter:on
+        ).extracting(Character::getType).containsExactly(CharacterType.ALIEN, CharacterType.DEMON, CharacterType.GHOST);
+    }
+
+    @Test
+    public void testRootMap() {
+        assertThat(
+        //@formatter:off
+            m$(() -> new LinkedHashMap<String, Character>())
+                .$$(Character::new)
+                    .$$(CharacterType.GOLEM).onto(Character::setType)
+                .at("Blade")
+                .$$(Character::new)
+                    .$$(CharacterType.GOLEM).onto(Character::setType)
+                .at("Pinhead")
+                .$$(Character::new)
+                    .$$(CharacterType.GOLEM).onto(Character::setType)
+                .at("Jester")
+            .get()
+        //@formatter:on
+        ).satisfies(m -> {
+            assertThat(m.keySet()).containsExactly("Blade", "Pinhead", "Jester");
+            assertThat(m.values()).extracting(Character::getType).allSatisfy(CharacterType.GOLEM::equals);
+        });
     }
 }
