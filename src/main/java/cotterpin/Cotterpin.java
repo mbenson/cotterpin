@@ -312,7 +312,7 @@ public class Cotterpin {
      */
     @SuppressWarnings("unchecked")
     public static <T, R extends Blueprint.Root<T, R>> R build(BuildStrategy<T> strategy, Supplier<T> t) {
-        return (R) new RootImpl<>(strategy, t);
+        return (R) new RootImpl<>(Objects.requireNonNull(strategy), t);
     }
 
     /**
