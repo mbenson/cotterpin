@@ -34,8 +34,8 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
     /**
      * Root Blueprint type.
      *
-     * @param <T>
-     * @param <S>
+     * @param <T> built type
+     * @param <S> self type
      */
     public interface Root<T, S extends Root<T, S>> extends Blueprint<T, S>, Supplier<T> {
 
