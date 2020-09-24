@@ -25,6 +25,7 @@ import static org.mockito.Mockito.times;
 
 import java.time.Year;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -264,6 +265,30 @@ public class CotterpinTest {
     }
 
     @Test
+    public void testTransformedRootCollection() {
+        assertThat(
+        //@formatter:off
+            Cotterpin.buildCollection(() -> new ArrayList<Character>())
+                .element(Character::new)
+                    .child(CharacterType.ALIEN).onto(Character::setType)
+                .add()
+                .element(Character::new)
+                    .child(CharacterType.DEMON).onto(Character::setType)
+                .add()
+                .element(Character::new)
+                    .child(CharacterType.GHOST).onto(Character::setType)
+                .add()
+            .map(Collections::unmodifiableList)
+            .get()
+        //@formatter:on
+        ).satisfies(c -> {
+            assertThat(c).isInstanceOf(Collections.unmodifiableList(Collections.emptyList()).getClass());
+            assertThat(c).extracting(Character::getType).containsExactly(CharacterType.ALIEN, CharacterType.DEMON,
+                    CharacterType.GHOST);
+        });
+    }
+
+    @Test
     public void testRootMap() {
         assertThat(
         //@formatter:off
@@ -280,6 +305,30 @@ public class CotterpinTest {
             .get()
         //@formatter:on
         ).satisfies(m -> {
+            assertThat(m.keySet()).containsExactly("Blade", "Pinhead", "Jester");
+            assertThat(m.values()).extracting(Character::getType).allSatisfy(CharacterType.GOLEM::equals);
+        });
+    }
+
+    @Test
+    public void testTransformedRootMap() {
+        assertThat(
+        //@formatter:off
+            Cotterpin.buildMap(() -> new LinkedHashMap<String, Character>())
+                .value(Character::new)
+                    .child(CharacterType.GOLEM).onto(Character::setType)
+                .at("Blade")
+                .value(Character::new)
+                    .child(CharacterType.GOLEM).onto(Character::setType)
+                .at("Pinhead")
+                .value(Character::new)
+                    .child(CharacterType.GOLEM).onto(Character::setType)
+                .at("Jester")
+            .map(Collections::unmodifiableMap)
+            .get()
+        //@formatter:on
+        ).satisfies(m -> {
+            assertThat(m).isInstanceOf(Collections.unmodifiableMap(Collections.emptyMap()).getClass());
             assertThat(m.keySet()).containsExactly("Blade", "Pinhead", "Jester");
             assertThat(m.values()).extracting(Character::getType).allSatisfy(CharacterType.GOLEM::equals);
         });

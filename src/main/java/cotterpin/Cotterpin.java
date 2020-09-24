@@ -32,6 +32,7 @@ import org.apache.commons.lang3.reflect.Typed;
 import cotterpin.Blueprint.Child;
 import cotterpin.Blueprint.IntoMap;
 import cotterpin.Blueprint.Mutator;
+import cotterpin.Blueprint.Root;
 
 /**
  * Entry point.
@@ -115,11 +116,9 @@ public class Cotterpin {
         }
 
         @Override
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         public <TT, SS extends Root<TT, SS>> SS map(Function<? super T, ? extends TT> xform) {
-            @SuppressWarnings({ "unchecked", "rawtypes" })
-            final SS result = (SS) new RootImpl(buildStrategy.child(),
-                    () -> Objects.requireNonNull(xform).apply(get()));
-            return result;
+            return (SS) new RootImpl(buildStrategy.child(), () -> Objects.requireNonNull(xform).apply(get()));
         }
 
         @Override
@@ -161,6 +160,12 @@ public class Cotterpin {
         public S strategy(ChildStrategy... strategies) {
             children.adopt(strategies);
             return (S) this;
+        }
+
+        @Override
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        public <T, SS extends Root<T, SS>> SS map(Function<? super C, ? extends T> xform) {
+            return (SS) new RootImpl(buildStrategy.child(), () -> Objects.requireNonNull(xform).apply(get()));
         }
     }
 
@@ -236,6 +241,12 @@ public class Cotterpin {
         public S strategy(ChildStrategy... strategies) {
             children.adopt(strategies);
             return (S) this;
+        }
+
+        @Override
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        public <T, SS extends Root<T, SS>> SS map(Function<? super M, ? extends T> xform) {
+            return (SS) new RootImpl(buildStrategy.child(), () -> Objects.requireNonNull(xform).apply(get()));
         }
     }
 
@@ -506,24 +517,23 @@ public class Cotterpin {
         return build(singleton(), () -> t);
     }
 
-//    /**
-//     * Begin to build a (root) {@link Collection} blueprint (implicit singleton
-//     * strategy).
-//     * 
-//     * @param <E> element type
-//     * @param <C> built type
-//     * @param <R> {@link Blueprint.OfCollection} type
-//     * @param c   value
-//     * @return R
-//     */
-//    public static <E, C extends Collection<E>, R extends Blueprint.OfCollection<E, C, R>> R buildCollection(C c) {
-//        return buildCollection(singleton(), () -> c);
-//    }
+    /**
+     * Begin to build a (root) {@link Collection} blueprint (implicit singleton
+     * strategy).
+     * 
+     * @param <E> element type
+     * @param <C> built type
+     * @param <R> {@link Blueprint.OfCollection} type
+     * @param c   value
+     * @return R
+     */
+    public static <E, C extends Collection<E>, R extends Blueprint.OfCollection<E, C, R>> R buildCollection(C c) {
+        return buildCollection(singleton(), () -> c);
+    }
 
     /**
      * Begin to build a (root) {@link Collection} blueprint (implicit singleton
-     * strategy). NOTE: an apparent OpenJDK bug prevents an overloaded (C) signature
-     * from being properly differentiated from this method.
+     * strategy).
      * 
      * @param <E> element type
      * @param <C> built type
@@ -553,18 +563,18 @@ public class Cotterpin {
         return (R) new OfCollectionImpl<>(strategy, c);
     }
 
-//    /**
-//     * Shorthand for {@link #buildCollection(Collection)}.
-//     * 
-//     * @param <E> element type
-//     * @param <C> built type
-//     * @param <R> {@link Blueprint.OfCollection} type
-//     * @param c   value
-//     * @return R
-//     */
-//    public static <E, C extends Collection<E>, R extends Blueprint.OfCollection<E, C, R>> R c$(C c) {
-//        return buildCollection(c);
-//    }
+    /**
+     * Shorthand for {@link #buildCollection(Collection)}.
+     * 
+     * @param <E> element type
+     * @param <C> built type
+     * @param <R> {@link Blueprint.OfCollection} type
+     * @param c   value
+     * @return R
+     */
+    public static <E, C extends Collection<E>, R extends Blueprint.OfCollection<E, C, R>> R c$(C c) {
+        return buildCollection(c);
+    }
 
     /**
      * Shorthand for {@link #buildCollection(Supplier)}.
@@ -615,8 +625,6 @@ public class Cotterpin {
 
     /**
      * Begin to build a (root) {@link Map} blueprint (implicit singleton strategy).
-     * NOTE: an apparent OpenJDK bug prevents an overloaded (M) signature from being
-     * properly differentiated from this method.
      * 
      * @param <K> key type
      * @param <V> value type
@@ -629,20 +637,20 @@ public class Cotterpin {
         return buildMap(singleton(), m);
     }
 
-//    /**
-//     * Begin to build a (root) {@link Map} blueprint (implicit singleton strategy).
-//     * 
-//     * @param <K> key type
-//     * @param <V> value type
-//     * @param <M> {@link Map} type
-//     * @param <R> {@link Blueprint.OfMap} type
-//     * @param m   value
-//     * @return R
-//     */
-//    public static <K, V, M extends Map<K, V>, R extends Blueprint.OfMap<K, V, M, R>> R buildMap(M m) {
-//        return buildMap(singleton(), () -> m);
-//    }
-//
+    /**
+     * Begin to build a (root) {@link Map} blueprint (implicit singleton strategy).
+     * 
+     * @param <K> key type
+     * @param <V> value type
+     * @param <M> {@link Map} type
+     * @param <R> {@link Blueprint.OfMap} type
+     * @param m   value
+     * @return R
+     */
+    public static <K, V, M extends Map<K, V>, R extends Blueprint.OfMap<K, V, M, R>> R buildMap(M m) {
+        return buildMap(singleton(), () -> m);
+    }
+
     /**
      * Shorthand for {@link #buildMap(BuildStrategy, Supplier)}.
      * 
@@ -674,20 +682,20 @@ public class Cotterpin {
         return buildMap(singleton(), m);
     }
 
-//    /**
-//     * Shorthand for {@link #buildMap(Map)}.
-//     * 
-//     * @param <K> key type
-//     * @param <V> value type
-//     * @param <M> {@link Map} type
-//     * @param <R> {@link Blueprint.OfMap} type
-//     * @param m   value
-//     * @return R
-//     */
-//    public static <K, V, M extends Map<K, V>, R extends Blueprint.OfMap<K, V, M, R>> R m$(M m) {
-//        return buildMap(singleton(), () -> m);
-//    }
-//
+    /**
+     * Shorthand for {@link #buildMap(Map)}.
+     * 
+     * @param <K> key type
+     * @param <V> value type
+     * @param <M> {@link Map} type
+     * @param <R> {@link Blueprint.OfMap} type
+     * @param m   value
+     * @return R
+     */
+    public static <K, V, M extends Map<K, V>, R extends Blueprint.OfMap<K, V, M, R>> R m$(M m) {
+        return buildMap(singleton(), () -> m);
+    }
+
     private Cotterpin() {
     }
 }
