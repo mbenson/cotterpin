@@ -47,7 +47,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
          * @param xform {@link Function}
          * @return {@code SS}
          */
-        public <TT, SS extends Root<TT, SS>> SS map(Function<? super T, ? extends TT> xform);
+        <TT, SS extends Root<TT, SS>> SS map(Function<? super T, ? extends TT> xform);
     }
 
     /**
