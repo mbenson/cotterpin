@@ -128,6 +128,18 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
          * @return {@code this}, fluently
          */
         S strategy(ChildStrategy... strategies);
+
+        /**
+         * Transform this {@link Blueprint.OfCollection}. The assumption is that the
+         * caller has completed the {@link Collection} stage of the build and now
+         * desires a simple root {@link Blueprint}.
+         * 
+         * @param <T>   new built type
+         * @param <SS>  new {@link Blueprint.Root} type
+         * @param xform {@link Function}
+         * @return {@code SS}
+         */
+        <T, SS extends Root<T, SS>> SS map(Function<? super C, ? extends T> xform);
     }
 
     /**
@@ -224,6 +236,18 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
          * @return {@code this}, fluently
          */
         S strategy(ChildStrategy... strategies);
+
+        /**
+         * Transform this {@link Blueprint.OfMap}. The assumption is that the caller has
+         * completed the {@link Map} stage of the build and now desires a simple root
+         * {@link Blueprint}.
+         * 
+         * @param <T>   new built type
+         * @param <SS>  new {@link Blueprint.Root} type
+         * @param xform {@link Function}
+         * @return {@code SS}
+         */
+        <T, SS extends Root<T, SS>> SS map(Function<? super M, ? extends T> xform);
     }
 
     /**
