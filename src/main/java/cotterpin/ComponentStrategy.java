@@ -46,7 +46,7 @@ public interface ComponentStrategy<P, T> extends UnaryOperator<Function<P, T>> {
      * 
      * @param <P>    parent type
      * @param <T>    child type
-     * @param record {@link BiConsumer} to record onto a parent the child object
+     * @param store {@link BiConsumer} to record onto a parent the child object
      *               created by {@code create}
      * @param create {@link Supplier} of {@code T}
      * @return {@link IfNull}
@@ -83,7 +83,7 @@ public interface ComponentStrategy<P, T> extends UnaryOperator<Function<P, T>> {
      * Chain {@code this} to {@code s}.
      * 
      * @param s
-     * @return
+     * @return {@link ComponentStrategy}
      */
     default ComponentStrategy<P, T> of(ComponentStrategy<P, T> s) {
         return compose(s)::apply;
