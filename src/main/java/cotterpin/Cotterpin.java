@@ -19,11 +19,17 @@ import static cotterpin.BuildStrategy.prototype;
 import static cotterpin.BuildStrategy.singleton;
 
 import java.util.Collection;
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.IntConsumer;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.Validate;
@@ -32,6 +38,8 @@ import org.apache.commons.lang3.reflect.Typed;
 import cotterpin.Blueprint.Child;
 import cotterpin.Blueprint.IntoMap;
 import cotterpin.Blueprint.Mutator;
+import cotterpin.Blueprint.OfCollectionElement;
+import cotterpin.Blueprint.OfLoopedMapEntry;
 import cotterpin.Blueprint.Root;
 
 /**
@@ -61,6 +69,59 @@ public class Cotterpin {
         @Override
         public <P, T> BiConsumer<P, T> apply(BiConsumer<P, T> cmer) {
             return current.apply(cmer);
+        }
+    }
+
+    private static class Context {
+        static final ThreadLocal<Context> CURRENT = new ThreadLocal<>();
+
+        static Context current() {
+            Context result = CURRENT.get();
+            Validate.validState(result != null);
+            return result;
+        }
+
+        final Loop<?> loop = new Loop<>();
+
+        /**
+         * For top level {@link Supplier}s.
+         * 
+         * @param <T>
+         * @param buildStrategy
+         * @return T
+         */
+        static <T> T getFrom(Supplier<T> buildStrategy) {
+            final Context existing = CURRENT.get();
+            try {
+                CURRENT.set(new Context());
+                return buildStrategy.get();
+            } finally {
+                CURRENT.set(existing);
+            }
+        }
+    }
+
+    private static class Loop<S extends List<AtomicInteger> & Deque<AtomicInteger>> {
+        @SuppressWarnings("unchecked")
+        final S stack = (S) new LinkedList<AtomicInteger>();
+
+        int index(int displacement) {
+            Validate.validState(!stack.isEmpty());
+            Validate.inclusiveBetween(0, stack.size() - 1, displacement);
+
+            return stack.get(displacement).intValue();
+        }
+
+        void push() {
+            stack.push(new AtomicInteger());
+        }
+
+        void pop() {
+            stack.pop();
+        }
+
+        int next() {
+            return stack.peek().incrementAndGet();
         }
     }
 
@@ -106,6 +167,17 @@ public class Cotterpin {
             children.adopt(strategies);
             return (S) this;
         }
+
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        @Override
+        public <X, L extends LoopBody<X, T, S, L>> L times(int n, Supplier<X> b) {
+            return (L) new LoopBodyImpl(b, this, children.current, n);
+        }
+
+        @Override
+        public Supplier<Integer> currentIndex(int displacement) {
+            return () -> Context.current().loop.index(displacement);
+        }
     }
 
     private static class RootImpl<T, S extends RootImpl<T, S>> extends BlueprintImpl<T, S>
@@ -123,7 +195,7 @@ public class Cotterpin {
 
         @Override
         public T get() {
-            return buildStrategy.get();
+            return Context.getFrom(buildStrategy);
         }
     }
 
@@ -139,13 +211,13 @@ public class Cotterpin {
 
         @Override
         public C get() {
-            return buildStrategy.get();
+            return Context.getFrom(buildStrategy);
         }
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
         public <R extends Blueprint.OfCollectionElement<E, C, S, R>> R element(Supplier<E> e) {
-            return (R) new OfCollectionElementImpl(buildStrategy.child(), e, (S) this, children.current);
+            return (R) new OfCollectionElementImpl(buildStrategy.child(), e, this, children.current);
         }
 
         @SuppressWarnings("unchecked")
@@ -166,6 +238,17 @@ public class Cotterpin {
         @SuppressWarnings({ "unchecked", "rawtypes" })
         public <T, SS extends Root<T, SS>> SS map(Function<? super C, ? extends T> xform) {
             return (SS) new RootImpl(buildStrategy.child(), () -> Objects.requireNonNull(xform).apply(get()));
+        }
+
+        @Override
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        public <L extends OfCollectionElement<E, C, S, L>> L times(int n, Supplier<E> e) {
+            return (L) new OfCollectionElementImpl(prototype(), e, this, children.current) {
+                public OfCollection add() {
+                    iterate(n, i -> super.add());
+                    return OfCollectionImpl.this;
+                }
+            };
         }
     }
 
@@ -210,13 +293,13 @@ public class Cotterpin {
 
         @Override
         public M get() {
-            return buildStrategy.get();
+            return Context.getFrom(buildStrategy);
         }
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         public <R extends Blueprint.OfMapEntry<K, V, M, S, R>> R value(Supplier<V> v) {
-            return (R) new OfMapEntryImpl(buildStrategy.child(), v, (S) this, children.current);
+            return (R) new OfMapEntryImpl(buildStrategy.child(), v, this, children.current);
         }
 
         @Override
@@ -248,6 +331,12 @@ public class Cotterpin {
         public <T, SS extends Root<T, SS>> SS map(Function<? super M, ? extends T> xform) {
             return (SS) new RootImpl(buildStrategy.child(), () -> Objects.requireNonNull(xform).apply(get()));
         }
+
+        @Override
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        public <L extends OfLoopedMapEntry<K, V, M, S, L>> L times(int n, Supplier<V> v) {
+            return (L) new OfLoopedMapEntryImpl(v, this, children.current, n);
+        }
     }
 
     private static class OfMapEntryImpl<K, V, M extends Map<K, V>, P extends Blueprint.OfMap<K, V, M, P>, S extends OfMapEntryImpl<K, V, M, P, S>>
@@ -275,6 +364,28 @@ public class Cotterpin {
         @Override
         public V get() {
             return buildStrategy.get();
+        }
+    }
+
+    private static class OfLoopedMapEntryImpl<K, V, M extends Map<K, V>, P extends Blueprint.OfMap<K, V, M, P>, S extends OfLoopedMapEntryImpl<K, V, M, P, S>>
+            extends OfMapEntryImpl<K, V, M, P, S> implements Blueprint.OfLoopedMapEntry<K, V, M, P, S> {
+        final int times;
+
+        OfLoopedMapEntryImpl(Supplier<V> target, P parent, ChildStrategy childStrategy, int times) {
+            super(prototype(), target, parent, childStrategy);
+            this.times = times;
+        }
+
+        @Override
+        public P at(K key) {
+            iterate(times, i -> super.at(key));
+            return parent;
+        }
+
+        @Override
+        public P at(IntFunction<? extends K> key) {
+            iterate(times, i -> super.at(key.apply(i)));
+            return parent;
         }
     }
 
@@ -349,6 +460,50 @@ public class Cotterpin {
             } finally {
                 parent = null;
             }
+        }
+    }
+
+    private static class LoopBodyImpl<T, U, P extends BlueprintImpl<U, P>, S extends LoopBodyImpl<T, U, P, S>>
+            extends ChildImpl<T, U, P, S> implements Blueprint.LoopBody<T, U, P, S>, Supplier<T> {
+
+        final int times;
+
+        LoopBodyImpl(Supplier<T> target, P parent, ChildStrategy childStrategy, int times) {
+            super(prototype(), target, parent, childStrategy);
+            this.times = times;
+        }
+
+        @Override
+        public P onto(BiConsumer<? super U, ? super T> mutator) {
+            iterate(times, i -> super.onto(mutator));
+            return parent;
+        }
+
+        @Override
+        public <C extends Collection<? super T>> P addTo(Function<? super U, C> coll,
+                ComponentStrategy<U, C> strategy) {
+            iterate(times, i -> super.addTo(coll, strategy));
+            return parent;
+        }
+
+        @Override
+        public <K, M extends Map<? super K, ? super T>> LoopBodyIntoMap<K, T, U, P> into(Function<? super U, M> map,
+                ComponentStrategy<U, M> strategy) {
+            final IntoMap<K, T, U, P> intoMap = super.into(map, strategy);
+            return new LoopBodyIntoMap<K, T, U, P>() {
+
+                @Override
+                public P at(K key) {
+                    iterate(times, i -> intoMap.at(key));
+                    return parent;
+                }
+
+                @Override
+                public P at(IntFunction<? extends K> key) {
+                    iterate(times, i -> intoMap.at(key.apply(i)));
+                    return parent;
+                }
+            };
         }
     }
 
@@ -694,6 +849,20 @@ public class Cotterpin {
      */
     public static <K, V, M extends Map<K, V>, R extends Blueprint.OfMap<K, V, M, R>> R m$(M m) {
         return buildMap(singleton(), () -> m);
+    }
+
+    private static void iterate(int times, IntConsumer body) {
+        final Loop<?> loop = Context.current().loop;
+        loop.push();
+        try {
+            int i = loop.index(0);
+            while (i < times) {
+                body.accept(i);
+                loop.next();
+            }
+        } finally {
+            loop.pop();
+        }
     }
 
     private Cotterpin() {

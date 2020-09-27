@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.reflect.Typed;
@@ -31,6 +32,7 @@ import org.apache.commons.lang3.reflect.Typed;
  * @param <S> self type
  */
 public interface Blueprint<T, S extends Blueprint<T, S>> {
+
     /**
      * Root Blueprint type.
      *
@@ -109,6 +111,52 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
          */
         default <R extends OfCollectionElement<E, C, S, R>> R nul() {
             return element(() -> null);
+        }
+
+        /**
+         * Begin a looped element.
+         * 
+         * @param <L> {@link OfCollectionElement} blueprint type
+         * @param n   number of iterations
+         * @param e   value {@link Supplier}
+         * @return L
+         */
+        <L extends OfCollectionElement<E, C, S, L>> L times(int n, Supplier<E> e);
+
+        /**
+         * Begin a looped element.
+         * 
+         * @param <L> {@link OfCollectionElement} blueprint type
+         * @param n   number of iterations
+         * @param e   value
+         * @return L
+         */
+        default <L extends OfCollectionElement<E, C, S, L>> L times(int n, E e) {
+            return times(n, () -> e);
+        }
+
+        /**
+         * Shorthand for {@link #times(int, Supplier)}.
+         * 
+         * @param <L> {@link OfCollectionElement} blueprint type
+         * @param n   number of iterations
+         * @param e   value {@link Supplier}
+         * @return L
+         */
+        default <L extends OfCollectionElement<E, C, S, L>> L x(int n, Supplier<E> e) {
+            return times(n, e);
+        }
+
+        /**
+         * Shorthand for {@link #times(int, Object)}.
+         * 
+         * @param <L> {@link LoopBody} blueprint type
+         * @param n   number of iterations
+         * @param e   value
+         * @return L
+         */
+        default <L extends OfCollectionElement<E, C, S, L>> L x(int n, E e) {
+            return times(n, () -> e);
         }
 
         /**
@@ -220,6 +268,52 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
         <R extends OfMapEntry<K, V, M, S, R>> R nul();
 
         /**
+         * Begin a looped entry.
+         * 
+         * @param <L> {@link OfLoopedMapEntry} blueprint type
+         * @param n   number of iterations
+         * @param v   value {@link Supplier}
+         * @return L
+         */
+        <L extends OfLoopedMapEntry<K, V, M, S, L>> L times(int n, Supplier<V> v);
+
+        /**
+         * Begin a looped entry.
+         * 
+         * @param <L> {@link OfLoopedMapEntry} blueprint type
+         * @param n   number of iterations
+         * @param v   value
+         * @return L
+         */
+        default <L extends OfLoopedMapEntry<K, V, M, S, L>> L times(int n, V v) {
+            return times(n, () -> v);
+        }
+
+        /**
+         * Alias for {@link #times(int, Supplier)}.
+         * 
+         * @param <L> {@link OfLoopedMapEntry} blueprint type
+         * @param n   number of iterations
+         * @param v   value {@link Supplier}
+         * @return L
+         */
+        default <L extends OfLoopedMapEntry<K, V, M, S, L>> L x(int n, Supplier<V> v) {
+            return times(n, v);
+        }
+
+        /**
+         * Alias for {@link #times(int, Object)}.
+         * 
+         * @param <L> {@link OfLoopedMapEntry} blueprint type
+         * @param n   number of iterations
+         * @param v   value
+         * @return L
+         */
+        default <L extends OfLoopedMapEntry<K, V, M, S, L>> L x(int n, V v) {
+            return times(n, () -> v);
+        }
+
+        /**
          * Add a step to the blueprint plan.
          * 
          * @param mutation which will be applied
@@ -253,11 +347,11 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
     /**
      * Blueprint of {@link Map} entry.
      *
-     * @param <K>
-     * @param <V>
-     * @param <M>
-     * @param <P>
-     * @param <S>
+     * @param <K> key type
+     * @param <V> value type
+     * @param <M> {@link Map} type
+     * @param <P> parent blueprint type
+     * @param <S> self type
      */
     public interface OfMapEntry<K, V, M extends Map<K, V>, P extends OfMap<K, V, M, P>, S extends OfMapEntry<K, V, M, P, S>>
             extends Blueprint<V, S> {
@@ -269,6 +363,27 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
          * @return parent blueprint, fluently
          */
         P at(K key);
+    }
+
+    /**
+     * Blueprint of looped {@link Map} entry.
+     *
+     * @param <K> key type
+     * @param <V> value type
+     * @param <M> {@link Map} type
+     * @param <P> parent blueprint type
+     * @param <S> self type
+     */
+    public interface OfLoopedMapEntry<K, V, M extends Map<K, V>, P extends OfMap<K, V, M, P>, S extends OfLoopedMapEntry<K, V, M, P, S>>
+            extends OfMapEntry<K, V, M, P, S> {
+
+        /**
+         * Put the built value into the hosted {@link Map} at {@code key}.
+         * 
+         * @param key function
+         * @return parent blueprint, fluently
+         */
+        P at(IntFunction<? extends K> key);
     }
 
     /**
@@ -350,6 +465,36 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
     }
 
     /**
+     * Blueprint for a loop body.
+     *
+     * @param <T> built type
+     * @param <U> parent type
+     * @param <P> parent blueprint type
+     * @param <S> self type
+     */
+    public interface LoopBody<T, U, P extends Blueprint<U, P>, S extends LoopBody<T, U, P, S>>
+            extends Blueprint.Child<T, U, P, S> {
+
+        /**
+         * {@inheritDoc}
+         * 
+         * @return {@link LoopBodyIntoMap}
+         */
+        default <K, M extends Map<? super K, ? super T>> LoopBodyIntoMap<K, T, U, P> into(Function<? super U, M> map) {
+            return into(map, ComponentStrategy.noop());
+        }
+
+        /**
+         * {@inheritDoc}
+         * 
+         * @return {@link LoopBodyIntoMap}
+         */
+        @Override
+        <K, M extends Map<? super K, ? super T>> LoopBodyIntoMap<K, T, U, P> into(Function<? super U, M> map,
+                ComponentStrategy<U, M> strategy);
+    }
+
+    /**
      * Fluent step for map insertion.
      *
      * @param <K> key type
@@ -366,6 +511,28 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
          * @return parent blueprint
          */
         P at(K key);
+    }
+
+    /**
+     * Fluent step for loop body map insertion. Presumes that it is unhelpful to map
+     * multiple values to the same key and therefore allows for the generation of
+     * the key from the loop index (but still supports the simple key).
+     *
+     * @param <K> key type
+     * @param <V> value type
+     * @param <U> parent type
+     * @param <P> parent blueprint type
+     */
+    public interface LoopBodyIntoMap<K, V, U, P extends Blueprint<U, P>> extends IntoMap<K, V, U, P> {
+
+        /**
+         * Complete the ongoing map insertion generating the key using the specified
+         * {@link IntFunction}.
+         * 
+         * @param key function
+         * @return parent blueprint
+         */
+        P at(IntFunction<? extends K> key);
     }
 
     /**
@@ -472,6 +639,55 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
     }
 
     /**
+     * Begin a loop body blueprint.
+     * 
+     * @param <X> value type
+     * @param <L> {@link LoopBody} blueprint type
+     * @param n   number of iterations
+     * @param b   value {@link Supplier}
+     * @return L
+     */
+    <X, L extends LoopBody<X, T, S, L>> L times(int n, Supplier<X> b);
+
+    /**
+     * Begin a loop body blueprint.
+     * 
+     * @param <X> value type
+     * @param <L> {@link LoopBody} blueprint type
+     * @param n   number of iterations
+     * @param b   value
+     * @return L
+     */
+    default <X, L extends LoopBody<X, T, S, L>> L times(int n, X b) {
+        return times(n, () -> b);
+    }
+
+    /**
+     * Shorthand for {@link #times(int, Supplier)}.
+     * 
+     * @param <X> value type
+     * @param <L> {@link LoopBody} blueprint type
+     * @param n   number of iterations
+     * @param b   value {@link Supplier}
+     */
+    default <X, L extends LoopBody<X, T, S, L>> L x(int n, Supplier<X> b) {
+        return times(n, b);
+    }
+
+    /**
+     * Shorthand for {@link #times(int, Object)}.
+     * 
+     * @param <X> value type
+     * @param <L> {@link LoopBody} blueprint type
+     * @param n   number of iterations
+     * @param b   value
+     * @return L
+     */
+    default <X, L extends LoopBody<X, T, S, L>> L x(int n, X b) {
+        return times(n, () -> b);
+    }
+
+    /**
      * Obtain a blueprint for a child component of the specified {@code type}.
      * 
      * @param <X>  component type
@@ -532,4 +748,21 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
      * @return {@code this}, fluently
      */
     S strategy(ChildStrategy... strategies);
+
+    /**
+     * Get a {@link Supplier} of the current index of the specified loop.
+     * 
+     * @param displacement number of levels back (0 indicates immediate loop)
+     * @return {@link Supplier} of {@link Integer}
+     */
+    Supplier<Integer> currentIndex(int displacement);
+
+    /**
+     * Get a {@link Supplier} of the current index of the immediate loop.
+     * 
+     * @return {@link Supplier} of {@link Integer}
+     */
+    default Supplier<Integer> currentIndex() {
+        return currentIndex(0);
+    }
 }
