@@ -24,6 +24,7 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.IntConsumer;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.Validate;
@@ -64,6 +65,7 @@ public class Cotterpin {
         }
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private static class BlueprintImpl<T, S extends BlueprintImpl<T, S>> implements Blueprint<T, S> {
 
         final BuildStrategy<T> buildStrategy;
@@ -75,35 +77,31 @@ public class Cotterpin {
             children = new ChildStrategyManager(childStrategy);
         }
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
         public <X, C extends Child<X, T, S, C>> C child(Supplier<X> c) {
             return (C) new ChildImpl(buildStrategy.child(), Objects.requireNonNull(c), this, children.current);
         }
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
         public <X, M extends Mutator<X, T, S, M>> M mutate(Typed<X> type) {
             return (M) new MutatorImpl(buildStrategy.child(), this, children.current);
         }
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
-        public <X, M extends Mutator<X, T, S, M>> M mutate(Class<X> type) {
-            return (M) new MutatorImpl(buildStrategy.child(), this, children.current);
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
         public S then(Consumer<? super T> mutation) {
             buildStrategy.apply(mutation);
             return (S) this;
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public S strategy(ChildStrategy... strategies) {
             children.adopt(strategies);
+            return (S) this;
+        }
+
+        @Override
+        public S times(int times, LoopBody<T, S> body) {
+            BlueprintSnapin.with(this, () -> iterate(times, body));
             return (S) this;
         }
     }
@@ -127,6 +125,7 @@ public class Cotterpin {
         }
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private static class OfCollectionImpl<E, C extends Collection<E>, S extends OfCollectionImpl<E, C, S>>
             implements Blueprint.OfCollection<E, C, S> {
         final BuildStrategy<C> buildStrategy;
@@ -142,20 +141,17 @@ public class Cotterpin {
             return buildStrategy.get();
         }
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
         public <R extends Blueprint.OfCollectionElement<E, C, S, R>> R element(Supplier<E> e) {
-            return (R) new OfCollectionElementImpl(buildStrategy.child(), e, (S) this, children.current);
+            return (R) new OfCollectionElementImpl(buildStrategy.child(), e, this, children.current);
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public S then(Consumer<? super C> mutation) {
             buildStrategy.apply(mutation);
             return (S) this;
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public S strategy(ChildStrategy... strategies) {
             children.adopt(strategies);
@@ -163,9 +159,14 @@ public class Cotterpin {
         }
 
         @Override
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         public <T, SS extends Root<T, SS>> SS map(Function<? super C, ? extends T> xform) {
             return (SS) new RootImpl(buildStrategy.child(), () -> Objects.requireNonNull(xform).apply(get()));
+        }
+
+        @Override
+        public S times(int times, CollectionLoopBody<E, C, S> body) {
+            OfCollectionSnapin.with(this, () -> iterate(times, body));
+            return (S) this;
         }
     }
 
@@ -198,6 +199,7 @@ public class Cotterpin {
         }
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private static class OfMapImpl<K, V, M extends Map<K, V>, S extends OfMapImpl<K, V, M, S>>
             implements Blueprint.OfMap<K, V, M, S> {
         final BuildStrategy<M> buildStrategy;
@@ -213,30 +215,17 @@ public class Cotterpin {
             return buildStrategy.get();
         }
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
         public <R extends Blueprint.OfMapEntry<K, V, M, S, R>> R value(Supplier<V> v) {
-            return (R) new OfMapEntryImpl(buildStrategy.child(), v, (S) this, children.current);
+            return (R) new OfMapEntryImpl(buildStrategy.child(), v, this, children.current);
         }
 
-        @Override
-        public <R extends Blueprint.OfMapEntry<K, V, M, S, R>> R value(V v) {
-            return value(() -> v);
-        }
-
-        @Override
-        public <R extends Blueprint.OfMapEntry<K, V, M, S, R>> R nul() {
-            return value(() -> null);
-        }
-
-        @SuppressWarnings("unchecked")
         @Override
         public S then(Consumer<? super M> mutation) {
             buildStrategy.apply(mutation);
             return (S) this;
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public S strategy(ChildStrategy... strategies) {
             children.adopt(strategies);
@@ -244,9 +233,14 @@ public class Cotterpin {
         }
 
         @Override
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         public <T, SS extends Root<T, SS>> SS map(Function<? super M, ? extends T> xform) {
             return (SS) new RootImpl(buildStrategy.child(), () -> Objects.requireNonNull(xform).apply(get()));
+        }
+
+        @Override
+        public S times(int times, MapLoopBody<K, V, M, S> body) {
+            OfMapSnapin.with(this, () -> iterate(times, body));
+            return (S) this;
         }
     }
 
@@ -261,10 +255,10 @@ public class Cotterpin {
         }
 
         @Override
-        public P at(K key) {
+        public P at(Supplier<K> key) {
             Validate.validState(parent != null);
             try {
-                BiConsumer<M, V> put = (m, v) -> m.put(key, v);
+                BiConsumer<M, V> put = (m, v) -> m.put(key.get(), v);
                 parent.then(m -> children.apply(put).accept(m, get()));
                 return parent;
             } finally {
@@ -423,10 +417,10 @@ public class Cotterpin {
         }
 
         @Override
-        public P at(K key) {
+        public P at(Supplier<K> key) {
             Validate.validState(parent != null);
 
-            final BiConsumer<U, V> cmer = childStrategy.apply((u, v) -> map.apply(u).put(key, v));
+            final BiConsumer<U, V> cmer = childStrategy.apply((u, v) -> map.apply(u).put(key.get(), v));
 
             parent.then(p -> cmer.accept(p, value.get()));
             try {
@@ -694,6 +688,16 @@ public class Cotterpin {
      */
     public static <K, V, M extends Map<K, V>, R extends Blueprint.OfMap<K, V, M, R>> R m$(M m) {
         return buildMap(singleton(), () -> m);
+    }
+
+    private static void iterate(int times, IntConsumer body) {
+        if (times == 0) {
+            return;
+        }
+        Validate.isTrue(times > 0);
+        for (int i = 0; i < times; i++) {
+            body.accept(i);
+        }
     }
 
     private Cotterpin() {

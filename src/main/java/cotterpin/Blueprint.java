@@ -22,6 +22,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.apache.commons.lang3.reflect.TypeUtils;
 import org.apache.commons.lang3.reflect.Typed;
 
 /**
@@ -31,6 +32,7 @@ import org.apache.commons.lang3.reflect.Typed;
  * @param <S> self type
  */
 public interface Blueprint<T, S extends Blueprint<T, S>> {
+
     /**
      * Root Blueprint type.
      *
@@ -112,6 +114,26 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
         }
 
         /**
+         * Perform the specified {@link CollectionLoopBody} {@code times} times.
+         * 
+         * @param times
+         * @param body
+         * @return {@code this}, fluently
+         */
+        S times(int times, CollectionLoopBody<E, C, S> body);
+
+        /**
+         * Shorthand for {@link #times(int, CollectionLoopBody)}.
+         * 
+         * @param times
+         * @param body
+         * @return {@code this}, fluently
+         */
+        default S x(int times, CollectionLoopBody<E, C, S> body) {
+            return times(times, body);
+        }
+
+        /**
          * Add a step to the blueprint plan.
          * 
          * @param mutation which will be applied
@@ -187,7 +209,9 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
          * @param v   value
          * @return R
          */
-        <R extends OfMapEntry<K, V, M, S, R>> R value(V v);
+        default <R extends OfMapEntry<K, V, M, S, R>> R value(V v) {
+            return value(() -> v);
+        }
 
         /**
          * Shorthand for {@link #value(Supplier)}.
@@ -217,7 +241,29 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
          * @param <R>
          * @return R
          */
-        <R extends OfMapEntry<K, V, M, S, R>> R nul();
+        default <R extends OfMapEntry<K, V, M, S, R>> R nul() {
+            return value(() -> null);
+        }
+
+        /**
+         * Perform the specified {@link MapLoopBody} {@code times} times.
+         * 
+         * @param times
+         * @param body
+         * @return {@code this}, fluently
+         */
+        S times(int times, MapLoopBody<K, V, M, S> body);
+
+        /**
+         * Shorthand for {@link #times(int, MapLoopBody)}.
+         * 
+         * @param times
+         * @param body
+         * @return {@code this}, fluently
+         */
+        default S x(int times, MapLoopBody<K, V, M, S> body) {
+            return times(times, body);
+        }
 
         /**
          * Add a step to the blueprint plan.
@@ -253,14 +299,23 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
     /**
      * Blueprint of {@link Map} entry.
      *
-     * @param <K>
-     * @param <V>
-     * @param <M>
-     * @param <P>
-     * @param <S>
+     * @param <K> key type
+     * @param <V> value type
+     * @param <M> {@link Map} type
+     * @param <P> parent blueprint type
+     * @param <S> self type
      */
     public interface OfMapEntry<K, V, M extends Map<K, V>, P extends OfMap<K, V, M, P>, S extends OfMapEntry<K, V, M, P, S>>
             extends Blueprint<V, S> {
+
+        /**
+         * Put the built value into the hosted {@link Map} at the key supplied by
+         * {@code key}.
+         * 
+         * @param key
+         * @return parent blueprint, fluently
+         */
+        P at(Supplier<K> key);
 
         /**
          * Put the built value into the hosted {@link Map} at {@code key}.
@@ -268,7 +323,9 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
          * @param key
          * @return parent blueprint, fluently
          */
-        P at(K key);
+        default P at(K key) {
+            return at(() -> key);
+        };
     }
 
     /**
@@ -360,12 +417,22 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
     public interface IntoMap<K, V, U, P extends Blueprint<U, P>> {
 
         /**
+         * Complete the ongoing map insertion using the supplied {@code key}.
+         * 
+         * @param key
+         * @return parent blueprint, fluently
+         */
+        P at(Supplier<K> key);
+
+        /**
          * Complete the ongoing map insertion using the specified {@code key}.
          * 
          * @param key
-         * @return parent blueprint
+         * @return parent blueprint, fluently
          */
-        P at(K key);
+        default P at(K key) {
+            return at(() -> key);
+        }
     }
 
     /**
@@ -489,7 +556,9 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
      * @param type
      * @return M
      */
-    <X, M extends Mutator<X, T, S, M>> M mutate(Class<X> type);
+    default <X, M extends Mutator<X, T, S, M>> M mutate(Class<X> type) {
+        return mutate(TypeUtils.wrap(type));
+    }
 
     /**
      * Shorthand for {@link #mutate(Typed)}.
@@ -513,6 +582,26 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
      */
     default <X, M extends Mutator<X, T, S, M>> M __(Class<X> type) {
         return mutate(type);
+    }
+
+    /**
+     * Repeat the specified loop body {@code times} times.
+     * 
+     * @param times
+     * @param body
+     * @return {@code this}, fluently
+     */
+    S times(int times, LoopBody<T, S> body);
+
+    /**
+     * Shorthand for {@link #times(int, LoopBody)}.
+     * 
+     * @param times
+     * @param body
+     * @return {@code this}, fluently
+     */
+    default S x(int times, LoopBody<T, S> body) {
+        return times(times, body);
     }
 
     /**
