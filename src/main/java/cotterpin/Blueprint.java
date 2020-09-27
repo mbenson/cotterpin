@@ -124,7 +124,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
          * specified {@link ChildStrategy} set from this point onward until and unless
          * this method is called again.
          * 
-         * @param childStrategies
+         * @param strategies
          * @return {@code this}, fluently
          */
         S strategy(ChildStrategy... strategies);
@@ -220,7 +220,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
          * specified {@link ChildStrategy} set from this point onward until and unless
          * this method is called again.
          * 
-         * @param childStrategies
+         * @param strategies
          * @return {@code this}, fluently
          */
         S strategy(ChildStrategy... strategies);
@@ -504,7 +504,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
      * specified {@link ChildStrategy} set from this point onward until and unless
      * this method is called again.
      * 
-     * @param childStrategies
+     * @param strategies
      * @return {@code this}, fluently
      */
     S strategy(ChildStrategy... strategies);

@@ -19,9 +19,6 @@ import java.util.function.BiConsumer;
 
 /**
  * Strategy interface for handling non-root objects in a graph.
- *
- * @param <P>
- * @param <T>
  */
 public interface ChildStrategy {
 
