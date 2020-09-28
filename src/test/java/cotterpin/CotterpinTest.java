@@ -26,6 +26,7 @@ import static org.mockito.Mockito.times;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -374,8 +375,8 @@ public class CotterpinTest {
 
     @Test
     public void testNestedLoop() {
-        // @formatter:off
         assertThat(
+        // @formatter:off
             Cotterpin.buildMap(() -> new TreeMap<Integer, List<Integer>>())
                 .times(3, (b, i) ->
                     b.value(ArrayList::new)
@@ -387,5 +388,55 @@ public class CotterpinTest {
             .get()
         // @formatter:on
         ).containsOnlyKeys(0, 1, 2).allSatisfy((k, v) -> assertThat(v).containsExactly(0, 1, 2));
+    }
+
+    @Test
+    public void testBasicForEach() {
+        assertThat(
+        // @formatter:off
+            Cotterpin.build(Franchise::new)
+            .each(CharacterType.values()).apply((t, p) ->
+                p.child(Character::new)
+                    .child(t).onto(Character::setType)
+                .into(Franchise::getCharacters, ifNull(Franchise::setCharacters, TreeMap::new)).at(t::name)
+            ).get().getCharacters()
+        // @formatter:on
+        ).hasSize(CharacterType.values().length).satisfies(m -> {
+            for (CharacterType t : CharacterType.values()) {
+                assertThat(m).hasEntrySatisfying(t.name(), c -> assertThat(c.getType()).isSameAs(t));
+            }
+        });
+    }
+
+    @Test
+    public void testCollectionForEach() {
+        assertThat(
+        // @formatter:off
+            Cotterpin.buildCollection(() -> new ArrayList<Character>())
+            .each(CharacterType.values()).apply((t, p) ->
+                p.element(Character::new)
+                    .child(t).onto(Character::setType)
+                .add()
+            ).get()
+        // @formatter:on
+        ).extracting(Character::getType).containsExactly(CharacterType.values());
+    }
+
+    @Test
+    public void testMapForEach() {
+        assertThat(
+        // @formatter:off
+            Cotterpin.buildMap(() -> new EnumMap<CharacterType,Character>(CharacterType.class))
+            .each(CharacterType.values()).apply((t, p) ->
+                p.value(Character::new)
+                    .child(t).onto(Character::setType)
+                .at(t)
+            ).get()
+        // @formatter:on
+        ).hasSize(CharacterType.values().length).satisfies(m -> {
+            for (CharacterType t : CharacterType.values()) {
+                assertThat(m).hasEntrySatisfying(t, c -> assertThat(c.getType()).isSameAs(t));
+            }
+        });
     }
 }

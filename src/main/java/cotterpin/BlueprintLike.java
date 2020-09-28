@@ -29,6 +29,24 @@ import java.util.function.ObjIntConsumer;
 public interface BlueprintLike<T, S extends BlueprintLike<T, S>> {
 
     /**
+     * Step in fluent interface.
+     *
+     * @param <E> value type
+     * @param <U> parent type
+     * @param <B> originating {@link BlueprintLike}
+     */
+    public interface ForEach<E, B extends BlueprintLike<?, B>> {
+
+        /**
+         * Apply to {@code body} each value and the originating blueprint.
+         * 
+         * @param body
+         * @return B
+         */
+        B apply(BiConsumer<E, B> body);
+    }
+
+    /**
      * Repeat the specified loop body {@code times} times.
      * 
      * @param times
@@ -46,6 +64,27 @@ public interface BlueprintLike<T, S extends BlueprintLike<T, S>> {
      */
     default S x(int times, ObjIntConsumer<S> body) {
         return times(times, body);
+    }
+
+    /**
+     * Begin the process of iterating over a number of input values.
+     * 
+     * @param <X>    value type
+     * @param values
+     * @return {@link ForEach}
+     */
+    <X> ForEach<X, S> each(Iterable<X> values);
+
+    /**
+     * Begin the process of iterating over a number of input values.
+     * 
+     * @param <X>    value type
+     * @param values
+     * @return {@link ForEach}
+     */
+    @SuppressWarnings("unchecked")
+    default <X> ForEach<X, S> each(X... values) {
+        return each(Arrays.asList(values));
     }
 
     /**
