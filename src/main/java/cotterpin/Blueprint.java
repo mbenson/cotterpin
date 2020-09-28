@@ -259,14 +259,23 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
     /**
      * Blueprint of {@link Map} entry.
      *
-     * @param <K>
-     * @param <V>
-     * @param <M>
-     * @param <P>
-     * @param <S>
+     * @param <K> key type
+     * @param <V> value type
+     * @param <M> {@link Map} type
+     * @param <P> parent blueprint type
+     * @param <S> self type
      */
     public interface OfMapEntry<K, V, M extends Map<K, V>, P extends OfMap<K, V, M, P>, S extends OfMapEntry<K, V, M, P, S>>
             extends Blueprint<V, S> {
+
+        /**
+         * Put the built value into the hosted {@link Map} at the key supplied by
+         * {@code key}.
+         * 
+         * @param key
+         * @return parent blueprint, fluently
+         */
+        P at(Supplier<K> key);
 
         /**
          * Put the built value into the hosted {@link Map} at {@code key}.
@@ -274,7 +283,9 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
          * @param key
          * @return parent blueprint, fluently
          */
-        P at(K key);
+        default P at(K key) {
+            return at(() -> key);
+        };
     }
 
     /**
@@ -366,12 +377,22 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
     public interface IntoMap<K, V, U, P extends Blueprint<U, P>> {
 
         /**
+         * Complete the ongoing map insertion using the supplied {@code key}.
+         * 
+         * @param key
+         * @return parent blueprint, fluently
+         */
+        P at(Supplier<K> key);
+
+        /**
          * Complete the ongoing map insertion using the specified {@code key}.
          * 
          * @param key
-         * @return parent blueprint
+         * @return parent blueprint, fluently
          */
-        P at(K key);
+        default P at(K key) {
+            return at(() -> key);
+        }
     }
 
     /**

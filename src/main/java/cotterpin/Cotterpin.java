@@ -236,10 +236,10 @@ public class Cotterpin {
         }
 
         @Override
-        public P at(K key) {
+        public P at(Supplier<K> key) {
             Validate.validState(parent != null);
             try {
-                BiConsumer<M, V> put = (m, v) -> m.put(key, v);
+                BiConsumer<M, V> put = (m, v) -> m.put(key.get(), v);
                 parent.then(m -> children.apply(put).accept(m, get()));
                 return parent;
             } finally {
@@ -398,10 +398,10 @@ public class Cotterpin {
         }
 
         @Override
-        public P at(K key) {
+        public P at(Supplier<K> key) {
             Validate.validState(parent != null);
 
-            final BiConsumer<U, V> cmer = childStrategy.apply((u, v) -> map.apply(u).put(key, v));
+            final BiConsumer<U, V> cmer = childStrategy.apply((u, v) -> map.apply(u).put(key.get(), v));
 
             parent.then(p -> cmer.accept(p, value.get()));
             try {
