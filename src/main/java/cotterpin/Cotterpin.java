@@ -66,26 +66,21 @@ public class Cotterpin {
         }
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static class BlueprintImpl<T, S extends BlueprintImpl<T, S>> implements Blueprint<T, S> {
-
+    @SuppressWarnings("unchecked")
+    private static class BlueprintLikeImpl<T,S extends BlueprintLikeImpl<T,S>> implements BlueprintLike<T,S> {
         final BuildStrategy<T> buildStrategy;
         final ChildStrategyManager children;
 
-        BlueprintImpl(BuildStrategy<T> buildStrategy, Supplier<T> target, ChildStrategy childStrategy) {
+        BlueprintLikeImpl(BuildStrategy<T> buildStrategy, Supplier<T> target, ChildStrategy childStrategy) {
             this.buildStrategy = buildStrategy;
             buildStrategy.initialize(target);
             children = new ChildStrategyManager(childStrategy);
         }
 
         @Override
-        public <X, C extends Child<X, T, S, C>> C child(Supplier<X> c) {
-            return (C) new ChildImpl(buildStrategy.child(), Objects.requireNonNull(c), this, children.current);
-        }
-
-        @Override
-        public <X, M extends Mutator<X, T, S, M>> M mutate(Typed<X> type) {
-            return (M) new MutatorImpl(buildStrategy.child(), this, children.current);
+        public S times(int times, ObjIntConsumer<S> body) {
+            iterate(times, bindTo((S) this, body));
+            return (S) this;
         }
 
         @Override
@@ -99,11 +94,24 @@ public class Cotterpin {
             children.adopt(strategies);
             return (S) this;
         }
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private static class BlueprintImpl<T, S extends BlueprintImpl<T, S>> extends BlueprintLikeImpl<T,S>
+            implements Blueprint<T, S> {
+
+        BlueprintImpl(BuildStrategy<T> buildStrategy, Supplier<T> target, ChildStrategy childStrategy) {
+            super(buildStrategy,target,childStrategy);
+        }
 
         @Override
-        public S times(int times, ObjIntConsumer<S> body) {
-            iterate(times, bindTo((S) this, body));
-            return (S) this;
+        public <X, C extends Child<X, T, S, C>> C child(Supplier<X> c) {
+            return (C) new ChildImpl(buildStrategy.child(), Objects.requireNonNull(c), this, children.current);
+        }
+
+        @Override
+        public <X, M extends Mutator<X, T, S, M>> M mutate(Typed<X> type) {
+            return (M) new MutatorImpl(buildStrategy.child(), this, children.current);
         }
     }
 
@@ -128,13 +136,10 @@ public class Cotterpin {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private static class OfCollectionImpl<E, C extends Collection<E>, S extends OfCollectionImpl<E, C, S>>
-            implements Blueprint.OfCollection<E, C, S> {
-        final BuildStrategy<C> buildStrategy;
-        final ChildStrategyManager children = new ChildStrategyManager(ChildStrategy.DEFAULT);
+            extends BlueprintLikeImpl<C,S> implements Blueprint.OfCollection<E, C, S> {
 
         OfCollectionImpl(BuildStrategy<C> buildStrategy, Supplier<C> c) {
-            this.buildStrategy = buildStrategy;
-            buildStrategy.initialize(c);
+            super(buildStrategy,c,ChildStrategy.DEFAULT);
         }
 
         @Override
@@ -148,26 +153,8 @@ public class Cotterpin {
         }
 
         @Override
-        public S then(Consumer<? super C> mutation) {
-            buildStrategy.apply(mutation);
-            return (S) this;
-        }
-
-        @Override
-        public S strategy(ChildStrategy... strategies) {
-            children.adopt(strategies);
-            return (S) this;
-        }
-
-        @Override
         public <T, SS extends Root<T, SS>> SS map(Function<? super C, ? extends T> xform) {
             return (SS) new RootImpl(buildStrategy.child(), () -> Objects.requireNonNull(xform).apply(get()));
-        }
-
-        @Override
-        public S times(int times, ObjIntConsumer<S> body) {
-            iterate(times, bindTo((S) this, body));
-            return (S) this;
         }
     }
 
@@ -201,14 +188,11 @@ public class Cotterpin {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static class OfMapImpl<K, V, M extends Map<K, V>, S extends OfMapImpl<K, V, M, S>>
+    private static class OfMapImpl<K, V, M extends Map<K, V>, S extends OfMapImpl<K, V, M, S>> extends BlueprintLikeImpl<M,S>
             implements Blueprint.OfMap<K, V, M, S> {
-        final BuildStrategy<M> buildStrategy;
-        final ChildStrategyManager children = new ChildStrategyManager(ChildStrategy.DEFAULT);
 
         OfMapImpl(BuildStrategy<M> buildStrategy, Supplier<M> m) {
-            this.buildStrategy = buildStrategy;
-            buildStrategy.initialize(m);
+            super(buildStrategy,m,ChildStrategy.DEFAULT);
         }
 
         @Override
@@ -222,26 +206,8 @@ public class Cotterpin {
         }
 
         @Override
-        public S then(Consumer<? super M> mutation) {
-            buildStrategy.apply(mutation);
-            return (S) this;
-        }
-
-        @Override
-        public S strategy(ChildStrategy... strategies) {
-            children.adopt(strategies);
-            return (S) this;
-        }
-
-        @Override
         public <T, SS extends Root<T, SS>> SS map(Function<? super M, ? extends T> xform) {
             return (SS) new RootImpl(buildStrategy.child(), () -> Objects.requireNonNull(xform).apply(get()));
-        }
-
-        @Override
-        public S times(int times, ObjIntConsumer<S> body) {
-            iterate(times, bindTo((S) this, body));
-            return (S) this;
         }
     }
 

@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.ObjIntConsumer;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
@@ -32,7 +31,7 @@ import org.apache.commons.lang3.reflect.Typed;
  * @param <T> built type
  * @param <S> self type
  */
-public interface Blueprint<T, S extends Blueprint<T, S>> {
+public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T,S> {
 
     /**
      * Root Blueprint type.
@@ -60,7 +59,8 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
      * @param <C> {@link Collection} type
      * @param <S> self type
      */
-    public interface OfCollection<E, C extends Collection<E>, S extends OfCollection<E, C, S>> extends Supplier<C> {
+    public interface OfCollection<E, C extends Collection<E>, S extends OfCollection<E, C, S>>
+            extends BlueprintLike<C,S>, Supplier<C> {
 
         /**
          * Obtain a blueprint for a directly-specified element.
@@ -115,44 +115,6 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
         }
 
         /**
-         * Perform the specified loop body {@code times} times.
-         * 
-         * @param times
-         * @param body
-         * @return {@code this}, fluently
-         */
-        S times(int times, ObjIntConsumer<S> body);
-
-        /**
-         * Shorthand for {@link #times(int, CollectionLoopBody)}.
-         * 
-         * @param times
-         * @param body
-         * @return {@code this}, fluently
-         */
-        default S x(int times, ObjIntConsumer<S> body) {
-            return times(times, body);
-        }
-
-        /**
-         * Add a step to the blueprint plan.
-         * 
-         * @param mutation which will be applied
-         * @return {@code this}, fluently
-         */
-        S then(Consumer<? super C> mutation);
-
-        /**
-         * In conjunction with inherited strategies (where applicable), apply the
-         * specified {@link ChildStrategy} set from this point onward until and unless
-         * this method is called again.
-         * 
-         * @param strategies
-         * @return {@code this}, fluently
-         */
-        S strategy(ChildStrategy... strategies);
-
-        /**
          * Transform this {@link Blueprint.OfCollection}. The assumption is that the
          * caller has completed the {@link Collection} stage of the build and now
          * desires a simple root {@link Blueprint}.
@@ -192,7 +154,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
      * @param <M> {@link Map} type
      * @param <S> self type
      */
-    public interface OfMap<K, V, M extends Map<K, V>, S extends OfMap<K, V, M, S>> extends Supplier<M> {
+    public interface OfMap<K, V, M extends Map<K, V>, S extends OfMap<K, V, M, S>> extends BlueprintLike<M,S>, Supplier<M> {
 
         /**
          * Obtain a blueprint for a {@link Map} entry (via its value).
@@ -245,44 +207,6 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
         default <R extends OfMapEntry<K, V, M, S, R>> R nul() {
             return value(() -> null);
         }
-
-        /**
-         * Perform the specified loop body {@code times} times.
-         * 
-         * @param times
-         * @param body
-         * @return {@code this}, fluently
-         */
-        S times(int times, ObjIntConsumer<S> body);
-
-        /**
-         * Shorthand for {@link #times(int, MapLoopBody)}.
-         * 
-         * @param times
-         * @param body
-         * @return {@code this}, fluently
-         */
-        default S x(int times, ObjIntConsumer<S> body) {
-            return times(times, body);
-        }
-
-        /**
-         * Add a step to the blueprint plan.
-         * 
-         * @param mutation which will be applied
-         * @return {@code this}, fluently
-         */
-        S then(Consumer<? super M> mutation);
-
-        /**
-         * In conjunction with inherited strategies (where applicable), apply the
-         * specified {@link ChildStrategy} set from this point onward until and unless
-         * this method is called again.
-         * 
-         * @param strategies
-         * @return {@code this}, fluently
-         */
-        S strategy(ChildStrategy... strategies);
 
         /**
          * Transform this {@link Blueprint.OfMap}. The assumption is that the caller has
@@ -583,26 +507,6 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
      */
     default <X, M extends Mutator<X, T, S, M>> M __(Class<X> type) {
         return mutate(type);
-    }
-
-    /**
-     * Repeat the specified loop body {@code times} times.
-     * 
-     * @param times
-     * @param body
-     * @return {@code this}, fluently
-     */
-    S times(int times, ObjIntConsumer<S> body);
-
-    /**
-     * Shorthand for {@link #times(int, LoopBody)}.
-     * 
-     * @param times
-     * @param body
-     * @return {@code this}, fluently
-     */
-    default S x(int times, ObjIntConsumer<S> body) {
-        return times(times, body);
     }
 
     /**
