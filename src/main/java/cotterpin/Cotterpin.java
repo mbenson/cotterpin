@@ -24,6 +24,8 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.IntConsumer;
+import java.util.function.ObjIntConsumer;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.Validate;
@@ -97,6 +99,12 @@ public class Cotterpin {
             children.adopt(strategies);
             return (S) this;
         }
+
+        @Override
+        public S times(int times, ObjIntConsumer<S> body) {
+            iterate(times, bindTo((S) this, body));
+            return (S) this;
+        }
     }
 
     private static class RootImpl<T, S extends RootImpl<T, S>> extends BlueprintImpl<T, S>
@@ -154,6 +162,12 @@ public class Cotterpin {
         @Override
         public <T, SS extends Root<T, SS>> SS map(Function<? super C, ? extends T> xform) {
             return (SS) new RootImpl(buildStrategy.child(), () -> Objects.requireNonNull(xform).apply(get()));
+        }
+
+        @Override
+        public S times(int times, ObjIntConsumer<S> body) {
+            iterate(times, bindTo((S) this, body));
+            return (S) this;
         }
     }
 
@@ -222,6 +236,12 @@ public class Cotterpin {
         @Override
         public <T, SS extends Root<T, SS>> SS map(Function<? super M, ? extends T> xform) {
             return (SS) new RootImpl(buildStrategy.child(), () -> Objects.requireNonNull(xform).apply(get()));
+        }
+
+        @Override
+        public S times(int times, ObjIntConsumer<S> body) {
+            iterate(times, bindTo((S) this, body));
+            return (S) this;
         }
     }
 
@@ -669,6 +689,20 @@ public class Cotterpin {
      */
     public static <K, V, M extends Map<K, V>, R extends Blueprint.OfMap<K, V, M, R>> R m$(M m) {
         return buildMap(singleton(), () -> m);
+    }
+
+    private static <T> IntConsumer bindTo(T t, ObjIntConsumer<T> cmer) {
+        return i -> cmer.accept(t, i);
+    }
+
+    private static void iterate(int times, IntConsumer body) {
+        if (times == 0) {
+            return;
+        }
+        Validate.isTrue(times > 0);
+        for (int i = 0; i < times; i++) {
+            body.accept(i);
+        }
     }
 
     private Cotterpin() {
