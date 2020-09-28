@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.ObjIntConsumer;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
@@ -111,6 +112,26 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
          */
         default <R extends OfCollectionElement<E, C, S, R>> R nul() {
             return element(() -> null);
+        }
+
+        /**
+         * Perform the specified loop body {@code times} times.
+         * 
+         * @param times
+         * @param body
+         * @return {@code this}, fluently
+         */
+        S times(int times, ObjIntConsumer<S> body);
+
+        /**
+         * Shorthand for {@link #times(int, CollectionLoopBody)}.
+         * 
+         * @param times
+         * @param body
+         * @return {@code this}, fluently
+         */
+        default S x(int times, ObjIntConsumer<S> body) {
+            return times(times, body);
         }
 
         /**
@@ -223,6 +244,26 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
          */
         default <R extends OfMapEntry<K, V, M, S, R>> R nul() {
             return value(() -> null);
+        }
+
+        /**
+         * Perform the specified loop body {@code times} times.
+         * 
+         * @param times
+         * @param body
+         * @return {@code this}, fluently
+         */
+        S times(int times, ObjIntConsumer<S> body);
+
+        /**
+         * Shorthand for {@link #times(int, MapLoopBody)}.
+         * 
+         * @param times
+         * @param body
+         * @return {@code this}, fluently
+         */
+        default S x(int times, ObjIntConsumer<S> body) {
+            return times(times, body);
         }
 
         /**
@@ -542,6 +583,26 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
      */
     default <X, M extends Mutator<X, T, S, M>> M __(Class<X> type) {
         return mutate(type);
+    }
+
+    /**
+     * Repeat the specified loop body {@code times} times.
+     * 
+     * @param times
+     * @param body
+     * @return {@code this}, fluently
+     */
+    S times(int times, ObjIntConsumer<S> body);
+
+    /**
+     * Shorthand for {@link #times(int, LoopBody)}.
+     * 
+     * @param times
+     * @param body
+     * @return {@code this}, fluently
+     */
+    default S x(int times, ObjIntConsumer<S> body) {
+        return times(times, body);
     }
 
     /**

@@ -28,12 +28,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.reflect.TypeLiteral;
+import org.apache.commons.lang3.tuple.Pair;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -332,5 +336,56 @@ public class CotterpinTest {
             assertThat(m.keySet()).containsExactly("Blade", "Pinhead", "Jester");
             assertThat(m.values()).extracting(Character::getType).allSatisfy(CharacterType.GOLEM::equals);
         });
+    }
+
+    @Test
+    public void testBasicLoop() {
+        Franchise f = Cotterpin.build(Mockito.mock(Franchise.class))
+                .times(5, (b, i) -> b.child(String.valueOf(i)).onto(Franchise::setName)).get();
+
+        Mockito.verify(f, times(5)).setName(Mockito.anyString());
+    }
+
+    @Test
+    public void testCollectionLoop() {
+        assertThat(
+        //@formatter:off
+            Cotterpin.buildCollection(() -> new TreeSet<Integer>())
+                .times(5, (b, i) ->
+                    b.element(Integer.valueOf(i)).add()
+                )
+            .get()
+        //@formatter:on
+        ).containsExactly(0, 1, 2, 3, 4);
+    }
+
+    @Test
+    public void testMapLoop() {
+        assertThat(
+        // @formatter:off
+            Cotterpin.buildMap(() -> new TreeMap<Integer, String>())
+                .times(5, (b, i) ->
+                    b.value(String.valueOf(i)).at(i)
+                )
+            .get()
+        // @formatter:on
+        ).containsExactly(Pair.of(0, "0"), Pair.of(1, "1"), Pair.of(2, "2"), Pair.of(3, "3"), Pair.of(4, "4"));
+    }
+
+    @Test
+    public void testNestedLoop() {
+        // @formatter:off
+        assertThat(
+            Cotterpin.buildMap(() -> new TreeMap<Integer, List<Integer>>())
+                .times(3, (b, i) ->
+                    b.value(ArrayList::new)
+                        .times(3, (l, j) ->
+                            l.child(j).addTo(Function.identity())
+                        )
+                    .at(i)
+                )
+            .get()
+        // @formatter:on
+        ).containsOnlyKeys(0, 1, 2).allSatisfy((k, v) -> assertThat(v).containsExactly(0, 1, 2));
     }
 }

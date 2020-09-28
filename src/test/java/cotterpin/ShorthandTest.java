@@ -33,11 +33,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.reflect.TypeLiteral;
+import org.apache.commons.lang3.tuple.Pair;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -154,16 +158,16 @@ public class ShorthandTest {
     public void testLazyComponent() {
         Franchise f = new Franchise();
         Info info = f.getInfo();
-        assertThat($(f).__(Info.class).onto(Franchise::getInfo, ifNull(Franchise::setInfo, Info::new)).get()
-                .getInfo()).isSameAs(info);
+        assertThat($(f).__(Info.class).onto(Franchise::getInfo, ifNull(Franchise::setInfo, Info::new)).get().getInfo())
+                .isSameAs(info);
     }
 
     @Test
     public void testMissingComponent() {
         Franchise f = new Franchise();
         f.setInfo(null);
-        assertThat($(f).__(Info.class).onto(Franchise::getInfo, ifNull(Franchise::setInfo, Info::new)).get()
-                .getInfo()).isNotNull();
+        assertThat($(f).__(Info.class).onto(Franchise::getInfo, ifNull(Franchise::setInfo, Info::new)).get().getInfo())
+                .isNotNull();
     }
 
     @Test
@@ -194,8 +198,7 @@ public class ShorthandTest {
 
     @Test
     public void testIgnoreNullParentStrategy() {
-        Assertions.assertThat(
-                $((Franchise) null).strategy(IGNORE_NULL_PARENT).child("").onto(Franchise::setName).get())
+        Assertions.assertThat($((Franchise) null).strategy(IGNORE_NULL_PARENT).child("").onto(Franchise::setName).get())
                 .isNull();
     }
 
@@ -209,8 +212,7 @@ public class ShorthandTest {
     @Test
     public void testRestoreDefaultStrategy() {
         Franchise franchise = Mockito.mock(Franchise.class);
-        $(franchise).strategy(IGNORE_NULL_VALUE).$$((String) null).strategy(DEFAULT).onto(Franchise::setName)
-                .get();
+        $(franchise).strategy(IGNORE_NULL_VALUE).$$((String) null).strategy(DEFAULT).onto(Franchise::setName).get();
         Mockito.verify(franchise, times(1)).setName(null);
     }
 
@@ -314,5 +316,56 @@ public class ShorthandTest {
             assertThat(m.keySet()).containsExactly("Blade", "Pinhead", "Jester");
             assertThat(m.values()).extracting(Character::getType).allSatisfy(CharacterType.GOLEM::equals);
         });
+    }
+
+    @Test
+    public void testBasicLoop() {
+        Franchise f = $(Mockito.mock(Franchise.class)).x(5, (b, i) -> b.$$(String.valueOf(i)).onto(Franchise::setName))
+                .get();
+
+        Mockito.verify(f, times(5)).setName(Mockito.anyString());
+    }
+
+    @Test
+    public void testCollectionLoop() {
+        assertThat(
+        //@formatter:off
+            c$(() -> new TreeSet<Integer>())
+                .x(5, (b, i) ->
+                    b.$$(Integer.valueOf(i)).add()
+                )
+            .get()
+        //@formatter:on
+        ).containsExactly(0, 1, 2, 3, 4);
+    }
+
+    @Test
+    public void testMapLoop() {
+        assertThat(
+        // @formatter:off
+            m$(() -> new TreeMap<Integer, String>())
+                .x(5, (b, i) ->
+                    b.$$(String.valueOf(i)).at(i)
+                )
+            .get()
+        // @formatter:on
+        ).containsExactly(Pair.of(0, "0"), Pair.of(1, "1"), Pair.of(2, "2"), Pair.of(3, "3"), Pair.of(4, "4"));
+    }
+
+    @Test
+    public void testNestedLoop() {
+        // @formatter:off
+        assertThat(
+            m$(() -> new TreeMap<Integer, List<Integer>>())
+                .x(3, (b, i) ->
+                    b.$$(ArrayList::new)
+                        .x(3, (l, j) ->
+                            l.$$(j).addTo(Function.identity())
+                        )
+                    .at(i)
+                )
+            .get()
+        // @formatter:on
+        ).containsOnlyKeys(0, 1, 2).allSatisfy((k, v) -> assertThat(v).containsExactly(0, 1, 2));
     }
 }
