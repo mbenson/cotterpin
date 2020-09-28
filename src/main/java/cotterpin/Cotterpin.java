@@ -64,6 +64,7 @@ public class Cotterpin {
         }
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private static class BlueprintImpl<T, S extends BlueprintImpl<T, S>> implements Blueprint<T, S> {
 
         final BuildStrategy<T> buildStrategy;
@@ -75,27 +76,22 @@ public class Cotterpin {
             children = new ChildStrategyManager(childStrategy);
         }
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
         public <X, C extends Child<X, T, S, C>> C child(Supplier<X> c) {
             return (C) new ChildImpl(buildStrategy.child(), Objects.requireNonNull(c), this, children.current);
         }
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
         public <X, M extends Mutator<X, T, S, M>> M mutate(Typed<X> type) {
             return (M) new MutatorImpl(buildStrategy.child(), this, children.current);
         }
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
-        @SuppressWarnings("unchecked")
         public S then(Consumer<? super T> mutation) {
             buildStrategy.apply(mutation);
             return (S) this;
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public S strategy(ChildStrategy... strategies) {
             children.adopt(strategies);
@@ -122,6 +118,7 @@ public class Cotterpin {
         }
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private static class OfCollectionImpl<E, C extends Collection<E>, S extends OfCollectionImpl<E, C, S>>
             implements Blueprint.OfCollection<E, C, S> {
         final BuildStrategy<C> buildStrategy;
@@ -137,20 +134,17 @@ public class Cotterpin {
             return buildStrategy.get();
         }
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
         public <R extends Blueprint.OfCollectionElement<E, C, S, R>> R element(Supplier<E> e) {
-            return (R) new OfCollectionElementImpl(buildStrategy.child(), e, (S) this, children.current);
+            return (R) new OfCollectionElementImpl(buildStrategy.child(), e, this, children.current);
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public S then(Consumer<? super C> mutation) {
             buildStrategy.apply(mutation);
             return (S) this;
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public S strategy(ChildStrategy... strategies) {
             children.adopt(strategies);
@@ -158,7 +152,6 @@ public class Cotterpin {
         }
 
         @Override
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         public <T, SS extends Root<T, SS>> SS map(Function<? super C, ? extends T> xform) {
             return (SS) new RootImpl(buildStrategy.child(), () -> Objects.requireNonNull(xform).apply(get()));
         }
@@ -193,6 +186,7 @@ public class Cotterpin {
         }
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private static class OfMapImpl<K, V, M extends Map<K, V>, S extends OfMapImpl<K, V, M, S>>
             implements Blueprint.OfMap<K, V, M, S> {
         final BuildStrategy<M> buildStrategy;
@@ -208,30 +202,17 @@ public class Cotterpin {
             return buildStrategy.get();
         }
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
         public <R extends Blueprint.OfMapEntry<K, V, M, S, R>> R value(Supplier<V> v) {
-            return (R) new OfMapEntryImpl(buildStrategy.child(), v, (S) this, children.current);
+            return (R) new OfMapEntryImpl(buildStrategy.child(), v, this, children.current);
         }
 
-        @Override
-        public <R extends Blueprint.OfMapEntry<K, V, M, S, R>> R value(V v) {
-            return value(() -> v);
-        }
-
-        @Override
-        public <R extends Blueprint.OfMapEntry<K, V, M, S, R>> R nul() {
-            return value(() -> null);
-        }
-
-        @SuppressWarnings("unchecked")
         @Override
         public S then(Consumer<? super M> mutation) {
             buildStrategy.apply(mutation);
             return (S) this;
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public S strategy(ChildStrategy... strategies) {
             children.adopt(strategies);
@@ -239,7 +220,6 @@ public class Cotterpin {
         }
 
         @Override
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         public <T, SS extends Root<T, SS>> SS map(Function<? super M, ? extends T> xform) {
             return (SS) new RootImpl(buildStrategy.child(), () -> Objects.requireNonNull(xform).apply(get()));
         }

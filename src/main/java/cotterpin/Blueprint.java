@@ -32,6 +32,7 @@ import org.apache.commons.lang3.reflect.Typed;
  * @param <S> self type
  */
 public interface Blueprint<T, S extends Blueprint<T, S>> {
+
     /**
      * Root Blueprint type.
      *
@@ -188,7 +189,9 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
          * @param v   value
          * @return R
          */
-        <R extends OfMapEntry<K, V, M, S, R>> R value(V v);
+        default <R extends OfMapEntry<K, V, M, S, R>> R value(V v) {
+            return value(() -> v);
+        }
 
         /**
          * Shorthand for {@link #value(Supplier)}.
@@ -218,7 +221,9 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
          * @param <R>
          * @return R
          */
-        <R extends OfMapEntry<K, V, M, S, R>> R nul();
+        default <R extends OfMapEntry<K, V, M, S, R>> R nul() {
+            return value(() -> null);
+        }
 
         /**
          * Add a step to the blueprint plan.
