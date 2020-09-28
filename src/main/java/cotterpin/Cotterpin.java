@@ -35,6 +35,7 @@ import cotterpin.Blueprint.Child;
 import cotterpin.Blueprint.IntoMap;
 import cotterpin.Blueprint.Mutator;
 import cotterpin.Blueprint.Root;
+import cotterpin.BlueprintLike.ForEach;
 
 /**
  * Entry point.
@@ -84,6 +85,11 @@ public class Cotterpin {
         }
 
         @Override
+        public <X> ForEach<X, S> each(Iterable<X> values) {
+            return new ForEachImpl<>((S) this, values);
+        }
+
+        @Override
         public S then(Consumer<? super T> mutation) {
             buildStrategy.apply(mutation);
             return (S) this;
@@ -93,6 +99,22 @@ public class Cotterpin {
         public S strategy(ChildStrategy... strategies) {
             children.adopt(strategies);
             return (S) this;
+        }
+    }
+
+    private static class ForEachImpl<E, B extends BlueprintLike<?,B>> implements ForEach<E, B> {
+        final B parent;
+        final Iterable<E> values;
+
+        ForEachImpl(B parent, Iterable<E> values) {
+            this.parent = Objects.requireNonNull(parent);
+            this.values = Objects.requireNonNull(values);
+        }
+
+        @Override
+        public B apply(BiConsumer<E, B> body) {
+            values.forEach(v -> body.accept(v, parent));
+            return parent;
         }
     }
 
