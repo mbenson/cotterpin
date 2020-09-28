@@ -22,6 +22,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.apache.commons.lang3.reflect.TypeUtils;
 import org.apache.commons.lang3.reflect.Typed;
 
 /**
@@ -489,7 +490,9 @@ public interface Blueprint<T, S extends Blueprint<T, S>> {
      * @param type
      * @return M
      */
-    <X, M extends Mutator<X, T, S, M>> M mutate(Class<X> type);
+    default <X, M extends Mutator<X, T, S, M>> M mutate(Class<X> type) {
+        return mutate(TypeUtils.wrap(type));
+    }
 
     /**
      * Shorthand for {@link #mutate(Typed)}.

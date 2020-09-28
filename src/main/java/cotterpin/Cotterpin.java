@@ -89,11 +89,6 @@ public class Cotterpin {
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
-        public <X, M extends Mutator<X, T, S, M>> M mutate(Class<X> type) {
-            return (M) new MutatorImpl(buildStrategy.child(), this, children.current);
-        }
-
-        @Override
         @SuppressWarnings("unchecked")
         public S then(Consumer<? super T> mutation) {
             buildStrategy.apply(mutation);
