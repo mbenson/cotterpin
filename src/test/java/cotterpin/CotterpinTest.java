@@ -82,75 +82,73 @@ public class CotterpinTest {
         // @formatter:off
             Cotterpin.build(Franchise::new)
                 .child("Psycho").onto(Franchise::setName)
-            .get())
+            .get()
             // @formatter:on
-                                .hasFieldOrPropertyWithValue("name", "Psycho");
+        ).hasFieldOrPropertyWithValue("name", "Psycho");
     }
 
     @Test
     public void testMapProperty() {
         assertThat(
         // @formatter:off
-        Cotterpin.build(Franchise::new)
-            .child("Nightmare on Elm Street").onto(Franchise::setName)
-            .child(Character::new)
-                .child(CharacterType.GHOST).onto(Character::setType)
-            .into(Franchise::getCharacters, ifNull(Franchise::setCharacters, TreeMap::new)).at("Freddy Krueger")
-        .get())
+            Cotterpin.build(Franchise::new)
+                .child("Nightmare on Elm Street").onto(Franchise::setName)
+                .child(Character::new)
+                    .child(CharacterType.GHOST).onto(Character::setType)
+                .into(Franchise::getCharacters, ifNull(Franchise::setCharacters, TreeMap::new)).at("Freddy Krueger")
+            .get()
         // @formatter:on
-                                .hasFieldOrPropertyWithValue("name", "Nightmare on Elm Street")
-                                .satisfies(f -> assertThat(f.getCharacters()).hasEntrySatisfying("Freddy Krueger",
-                                        c -> assertThat(c.getType()).isSameAs(CharacterType.GHOST)));
+        ).hasFieldOrPropertyWithValue("name", "Nightmare on Elm Street").satisfies(f -> assertThat(f.getCharacters())
+                .hasEntrySatisfying("Freddy Krueger", c -> assertThat(c.getType()).isSameAs(CharacterType.GHOST)));
     }
 
     @Test
     public void testCollectionProperty() {
         assertThat(
         // @formatter:off
-        Cotterpin.build(Franchise::new)
-            .child("Evil Dead").onto(Franchise::setName)
-            .child(Character::new)
-                .child(CharacterType.UNDEAD).onto(Character::setType)
-                .child("Book").addTo(Character::getWeaknesses, ifNull(Character::setWeaknesses, LinkedHashSet<String>::new))
-                .child("Chainsaw").addTo(Character::getWeaknesses)
-                .child("Boomstick").addTo(Character::getWeaknesses)
-            .into(Franchise::getCharacters, ifNull(Franchise::setCharacters, TreeMap::new)).at("Henrietta")
-        .get())
+            Cotterpin.build(Franchise::new)
+                .child("Evil Dead").onto(Franchise::setName)
+                .child(Character::new)
+                    .child(CharacterType.UNDEAD).onto(Character::setType)
+                    .child("Book").addTo(Character::getWeaknesses, ifNull(Character::setWeaknesses, LinkedHashSet<String>::new))
+                    .child("Chainsaw").addTo(Character::getWeaknesses)
+                    .child("Boomstick").addTo(Character::getWeaknesses)
+                .into(Franchise::getCharacters, ifNull(Franchise::setCharacters, TreeMap::new)).at("Henrietta")
+            .get()
         // @formatter:on
-                                .hasFieldOrPropertyWithValue("name", "Evil Dead")
-                                .satisfies(f -> assertThat(f.getCharacters()).hasEntrySatisfying("Henrietta",
-                                        c -> assertThat(c.getWeaknesses()).containsExactly("Book", "Chainsaw",
-                                                "Boomstick")));
+        ).hasFieldOrPropertyWithValue("name", "Evil Dead")
+                .satisfies(f -> assertThat(f.getCharacters()).hasEntrySatisfying("Henrietta",
+                        c -> assertThat(c.getWeaknesses()).containsExactly("Book", "Chainsaw", "Boomstick")));
     }
 
     @Test
     public void testComponent() {
         assertThat(
         // @formatter:off
-        Cotterpin.build(Franchise::new)
-            .child("Halloween").onto(Franchise::setName)
-            .mutate(Franchise.Info.class)
-                .child(Year.of(1978)).onto(Franchise.Info::setOriginated)
-            .onto(Franchise::getInfo)
-        .get())
-                                .hasFieldOrPropertyWithValue("name", "Halloween")
-                                .extracting(Franchise::getInfo).hasFieldOrPropertyWithValue("originated", Year.of(1978));
-        // @formatter:on
+            Cotterpin.build(Franchise::new)
+                .child("Halloween").onto(Franchise::setName)
+                .mutate(Franchise.Info.class)
+                    .child(Year.of(1978)).onto(Franchise.Info::setOriginated)
+                .onto(Franchise::getInfo)
+            .get()
+            // @formatter:on
+        ).hasFieldOrPropertyWithValue("name", "Halloween").extracting(Franchise::getInfo)
+                .hasFieldOrPropertyWithValue("originated", Year.of(1978));
     }
 
     @Test
     public void testComponentWithTypeLiteral() {
         assertThat(
         // @formatter:off
-        Cotterpin.build(Franchise::new)
-            .child("Halloween").onto(Franchise::setName)
-            .mutate(new TypeLiteral<Franchise.Info>() {})
-                .child(Year.of(1978)).onto(Franchise.Info::setOriginated)
-            .onto(Franchise::getInfo)
-        .get())
-                                .hasFieldOrPropertyWithValue("name", "Halloween")
-                                .extracting(Franchise::getInfo).hasFieldOrPropertyWithValue("originated", Year.of(1978));
+            Cotterpin.build(Franchise::new)
+                .child("Halloween").onto(Franchise::setName)
+                .mutate(new TypeLiteral<Franchise.Info>() {})
+                    .child(Year.of(1978)).onto(Franchise.Info::setOriginated)
+                .onto(Franchise::getInfo)
+            .get()
         // @formatter:on
+        ).hasFieldOrPropertyWithValue("name", "Halloween").extracting(Franchise::getInfo)
+                .hasFieldOrPropertyWithValue("originated", Year.of(1978));
     }
 
     @Test
@@ -178,11 +176,11 @@ public class CotterpinTest {
     public void testMapChild() {
         assertThat(
         // @formatter:off
-        Cotterpin.build(Franchise::new)
-            .child("New Line").map(Optional::of).onto(Franchise::maybeSetStudio)
-        .get()
+            Cotterpin.build(Franchise::new)
+                .child("New Line").map(Optional::of).onto(Franchise::maybeSetStudio)
+            .get()
         // @formatter:on
-                        .getStudio()).isEqualTo("New Line");
+        ).hasFieldOrPropertyWithValue("studio", "New Line");
     }
 
     @Test
@@ -194,9 +192,9 @@ public class CotterpinTest {
     public void testNullChild() {
         assertThat(
         // @formatter:off
-        Cotterpin.build(Franchise::new)
-            .nul(String.class).onto(Franchise::setName)
-        .get()
+            Cotterpin.build(Franchise::new)
+                .nul(String.class).onto(Franchise::setName)
+            .get()
         // @formatter:on
                         .getName()).isNull();
     }
@@ -205,9 +203,9 @@ public class CotterpinTest {
     public void testParameterizedNullChild() {
         assertThat(
         // @formatter:off
-        Cotterpin.build(Franchise::new)
-            .nul(new TypeLiteral<Map<String, Character>>() {}).onto(Franchise::setCharacters)
-        .get().getCharacters()
+            Cotterpin.build(Franchise::new)
+                .nul(new TypeLiteral<Map<String, Character>>() {}).onto(Franchise::setCharacters)
+            .get().getCharacters()
         // @formatter:on
         ).isNull();
     }
@@ -216,9 +214,9 @@ public class CotterpinTest {
     public void testWildNullChildSetProperty() {
         Franchise f =
         // @formatter:off
-        Cotterpin.build(Mockito.mock(Franchise.class))
-            .nul().onto(Franchise::setName
-        ).get();
+            Cotterpin.build(Mockito.mock(Franchise.class))
+                .nul().onto(Franchise::setName
+            ).get();
         // @formatter:on
         Mockito.verify(f).setName(null);
     }

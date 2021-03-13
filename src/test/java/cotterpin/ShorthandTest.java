@@ -25,6 +25,7 @@ import static cotterpin.Cotterpin.$;
 import static cotterpin.Cotterpin.c$;
 import static cotterpin.Cotterpin.m$;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
@@ -43,7 +44,6 @@ import java.util.function.Supplier;
 
 import org.apache.commons.lang3.reflect.TypeLiteral;
 import org.apache.commons.lang3.tuple.Pair;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -84,75 +84,73 @@ public class ShorthandTest {
         // @formatter:off
             $(Franchise::new)
                 .$$("Psycho").onto(Franchise::setName)
-            .get())
+            .get()
             // @formatter:on
-                                .hasFieldOrPropertyWithValue("name", "Psycho");
+        ).hasFieldOrPropertyWithValue("name", "Psycho");
     }
 
     @Test
     public void testMapProperty() {
         assertThat(
         // @formatter:off
-        $(Franchise::new)
-            .$$("Nightmare on Elm Street").onto(Franchise::setName)
-            .$$(Character::new)
-                .$$(CharacterType.GHOST).onto(Character::setType)
-            .into(Franchise::getCharacters, ifNull(Franchise::setCharacters, TreeMap::new)).at("Freddy Krueger")
-        .get())
+            $(Franchise::new)
+                .$$("Nightmare on Elm Street").onto(Franchise::setName)
+                .$$(Character::new)
+                    .$$(CharacterType.GHOST).onto(Character::setType)
+                .into(Franchise::getCharacters, ifNull(Franchise::setCharacters, TreeMap::new)).at("Freddy Krueger")
+            .get()
         // @formatter:on
-                                .hasFieldOrPropertyWithValue("name", "Nightmare on Elm Street")
-                                .satisfies(f -> assertThat(f.getCharacters()).hasEntrySatisfying("Freddy Krueger",
-                                        c -> assertThat(c.getType()).isSameAs(CharacterType.GHOST)));
+        ).hasFieldOrPropertyWithValue("name", "Nightmare on Elm Street").satisfies(f -> assertThat(f.getCharacters())
+                .hasEntrySatisfying("Freddy Krueger", c -> assertThat(c.getType()).isSameAs(CharacterType.GHOST)));
     }
 
     @Test
     public void testCollectionProperty() {
         assertThat(
         // @formatter:off
-        $(Franchise::new)
-            .$$("Evil Dead").onto(Franchise::setName)
-            .$$(Character::new)
-                .$$(CharacterType.UNDEAD).onto(Character::setType)
-                .$$("Book").addTo(Character::getWeaknesses, ifNull(Character::setWeaknesses, LinkedHashSet<String>::new))
-                .$$("Chainsaw").addTo(Character::getWeaknesses)
-                .$$("Boomstick").addTo(Character::getWeaknesses)
-            .into(Franchise::getCharacters, ifNull(Franchise::setCharacters, TreeMap::new)).at("Henrietta")
-        .get())
+            $(Franchise::new)
+                .$$("Evil Dead").onto(Franchise::setName)
+                .$$(Character::new)
+                    .$$(CharacterType.UNDEAD).onto(Character::setType)
+                    .$$("Book").addTo(Character::getWeaknesses, ifNull(Character::setWeaknesses, LinkedHashSet<String>::new))
+                    .$$("Chainsaw").addTo(Character::getWeaknesses)
+                    .$$("Boomstick").addTo(Character::getWeaknesses)
+                .into(Franchise::getCharacters, ifNull(Franchise::setCharacters, TreeMap::new)).at("Henrietta")
+            .get()
         // @formatter:on
-                                .hasFieldOrPropertyWithValue("name", "Evil Dead")
-                                .satisfies(f -> assertThat(f.getCharacters()).hasEntrySatisfying("Henrietta",
-                                        c -> assertThat(c.getWeaknesses()).containsExactly("Book", "Chainsaw",
-                                                "Boomstick")));
+        ).hasFieldOrPropertyWithValue("name", "Evil Dead")
+                .satisfies(f -> assertThat(f.getCharacters()).hasEntrySatisfying("Henrietta",
+                        c -> assertThat(c.getWeaknesses()).containsExactly("Book", "Chainsaw", "Boomstick")));
     }
 
     @Test
     public void testComponent() {
         assertThat(
         // @formatter:off
-        $(Franchise::new)
-            .$$("Halloween").onto(Franchise::setName)
-            .__(Franchise.Info.class)
-                .$$(Year.of(1978)).onto(Franchise.Info::setOriginated)
-            .onto(Franchise::getInfo)
-        .get())
+            $(Franchise::new)
+                .$$("Halloween").onto(Franchise::setName)
+                .__(Franchise.Info.class)
+                    .$$(Year.of(1978)).onto(Franchise.Info::setOriginated)
+                .onto(Franchise::getInfo)
+            .get()
         // @formatter:on
-                                .hasFieldOrPropertyWithValue("name", "Halloween").extracting(Franchise::getInfo)
-                                .hasFieldOrPropertyWithValue("originated", Year.of(1978));
+        ).hasFieldOrPropertyWithValue("name", "Halloween").extracting(Franchise::getInfo)
+                .hasFieldOrPropertyWithValue("originated", Year.of(1978));
     }
 
     @Test
     public void testComponentWithTypeLiteral() {
         assertThat(
         // @formatter:off
-        $(Franchise::new)
-            .$$("Halloween").onto(Franchise::setName)
-            .__(new TypeLiteral<Franchise.Info>() {})
-                .$$(Year.of(1978)).onto(Franchise.Info::setOriginated)
-            .onto(Franchise::getInfo)
-        .get())
+            $(Franchise::new)
+                .$$("Halloween").onto(Franchise::setName)
+                .__(new TypeLiteral<Franchise.Info>() {})
+                    .$$(Year.of(1978)).onto(Franchise.Info::setOriginated)
+                .onto(Franchise::getInfo)
+            .get()
         // @formatter:on
-                                .hasFieldOrPropertyWithValue("name", "Halloween").extracting(Franchise::getInfo)
-                                .hasFieldOrPropertyWithValue("originated", Year.of(1978));
+        ).hasFieldOrPropertyWithValue("name", "Halloween").extracting(Franchise::getInfo)
+                .hasFieldOrPropertyWithValue("originated", Year.of(1978));
     }
 
     @Test
@@ -180,16 +178,16 @@ public class ShorthandTest {
     public void testMapChild() {
         assertThat(
         // @formatter:off
-        $(Franchise::new)
-            .$$("New Line").map(Optional::of).onto(Franchise::maybeSetStudio)
-        .get()
+            $(Franchise::new)
+                .$$("New Line").map(Optional::of).onto(Franchise::maybeSetStudio)
+            .get()
         // @formatter:on
-                        .getStudio()).isEqualTo("New Line");
+        ).hasFieldOrPropertyWithValue("studio", "New Line");
     }
 
     @Test
     public void testNull() {
-        Assertions.assertThat($(() -> null).get()).isNull();
+        assertThat($(() -> null).get()).isNull();
     }
 
     @Test(expected = NullPointerException.class)
@@ -199,8 +197,7 @@ public class ShorthandTest {
 
     @Test
     public void testIgnoreNullParentStrategy() {
-        Assertions.assertThat($((Franchise) null).strategy(IGNORE_NULL_PARENT).child("").onto(Franchise::setName).get())
-                .isNull();
+        assertThat($((Franchise) null).strategy(IGNORE_NULL_PARENT).child("").onto(Franchise::setName).get()).isNull();
     }
 
     @Test
@@ -219,14 +216,13 @@ public class ShorthandTest {
 
     @Test
     public void testResetStrategy() {
-        Assertions.assertThatThrownBy(() -> {
-            $((Character) null)
+        assertThatThrownBy(() -> {
             //@formatter:off
-                .strategy(IGNORE_NULL_PARENT)
+            $((Character) null).strategy(IGNORE_NULL_PARENT)
                 .$$(CharacterType.ALIEN).strategy(DEFAULT, IGNORE_NULL_VALUE)
                 .onto(Character::setType)
+            .get();
                 //@formatter:on
-                    .get();
         }).isInstanceOf(NullPointerException.class);
     }
 
