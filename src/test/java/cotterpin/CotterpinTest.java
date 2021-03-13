@@ -42,7 +42,6 @@ import java.util.function.Supplier;
 import org.apache.commons.lang3.reflect.TypeLiteral;
 import org.apache.commons.lang3.tuple.Pair;
 import org.assertj.core.api.Assertions;
-import org.assertj.core.api.MapAssert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
