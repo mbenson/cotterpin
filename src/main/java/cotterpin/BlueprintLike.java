@@ -32,7 +32,6 @@ public interface BlueprintLike<T, S extends BlueprintLike<T, S>> {
      * Step in fluent interface.
      *
      * @param <E> value type
-     * @param <U> parent type
      * @param <B> originating {@link BlueprintLike}
      */
     public interface ForEach<E, B extends BlueprintLike<?, B>> {
@@ -56,7 +55,7 @@ public interface BlueprintLike<T, S extends BlueprintLike<T, S>> {
     S times(int times, ObjIntConsumer<S> body);
 
     /**
-     * Shorthand for {@link #times(int, LoopBody)}.
+     * Shorthand for {@link #times(int, ObjIntConsumer)}.
      * 
      * @param times
      * @param body
