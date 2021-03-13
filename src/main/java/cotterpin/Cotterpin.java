@@ -29,6 +29,7 @@ import java.util.function.ObjIntConsumer;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.reflect.Typed;
 
 import cotterpin.Blueprint.Child;
@@ -68,7 +69,7 @@ public class Cotterpin {
     }
 
     @SuppressWarnings("unchecked")
-    private static class BlueprintLikeImpl<T,S extends BlueprintLikeImpl<T,S>> implements BlueprintLike<T,S> {
+    private static class BlueprintLikeImpl<T, S extends BlueprintLikeImpl<T, S>> implements BlueprintLike<T, S> {
         final BuildStrategy<T> buildStrategy;
         final ChildStrategyManager children;
 
@@ -102,7 +103,7 @@ public class Cotterpin {
         }
     }
 
-    private static class ForEachImpl<E, B extends BlueprintLike<?,B>> implements ForEach<E, B> {
+    private static class ForEachImpl<E, B extends BlueprintLike<?, B>> implements ForEach<E, B> {
         final B parent;
         final Iterable<E> values;
 
@@ -119,11 +120,11 @@ public class Cotterpin {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static class BlueprintImpl<T, S extends BlueprintImpl<T, S>> extends BlueprintLikeImpl<T,S>
+    private static class BlueprintImpl<T, S extends BlueprintImpl<T, S>> extends BlueprintLikeImpl<T, S>
             implements Blueprint<T, S> {
 
         BlueprintImpl(BuildStrategy<T> buildStrategy, Supplier<T> target, ChildStrategy childStrategy) {
-            super(buildStrategy,target,childStrategy);
+            super(buildStrategy, target, childStrategy);
         }
 
         @Override
@@ -134,6 +135,64 @@ public class Cotterpin {
         @Override
         public <X, M extends Mutator<X, T, S, M>> M mutate(Typed<X> type) {
             return (M) new MutatorImpl(buildStrategy.child(), this, children.current);
+        }
+
+        @Override
+        public <N extends WildChild<T, S, N>> N nul() {
+            ChildStrategyManager _children = new ChildStrategyManager(children.current);
+            MutableBoolean open = new MutableBoolean(Boolean.TRUE);
+
+            return (N) new WildChild<T, S, N>() {
+
+                @Override
+                public <X> S onto(BiConsumer<? super T, ? super X> mutator) {
+                    ensureOpen();
+                    then(p -> children.apply(mutator).accept(p, null));
+                    return close();
+                }
+
+                @Override
+                public S addTo(Function<? super T, Collection<?>> coll,
+                        ComponentStrategy<T, ? extends Collection<?>> strategy) {
+                    ensureOpen();
+
+                    final Function<T, Collection<?>> x = strategy.apply((Function) coll);
+
+                    BiConsumer<T, ?> cmer = children.apply((u, t) -> ((Collection) x.apply(u)).add(t));
+                    then(p -> cmer.accept(p, null));
+                    return close();
+                }
+
+                @Override
+                public <K, M extends Map<? super K, ?>> IntoMap<K, ?, T, S> into(Function<? super T, M> map,
+                        ComponentStrategy<T, ? extends M> strategy) {
+                    ensureOpen();
+                    try {
+                        final Function<T, M> m = strategy.apply((Function) map);
+                        return new IntoMapImpl(() -> null, m, (S) BlueprintImpl.this, children.current);
+                    } finally {
+                        close();
+                    }
+                }
+
+                @Override
+                public N strategy(ChildStrategy... strategies) {
+                    _children.adopt(strategies);
+                    return (N) this;
+                }
+
+                private synchronized void ensureOpen() {
+                    Validate.validState(open.booleanValue());
+                }
+
+                private synchronized S close() {
+                    try {
+                        return (S) BlueprintImpl.this;
+                    } finally {
+                        open.setFalse();
+                    }
+                }
+            };
         }
     }
 
@@ -158,10 +217,10 @@ public class Cotterpin {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private static class OfCollectionImpl<E, C extends Collection<E>, S extends OfCollectionImpl<E, C, S>>
-            extends BlueprintLikeImpl<C,S> implements Blueprint.OfCollection<E, C, S> {
+            extends BlueprintLikeImpl<C, S> implements Blueprint.OfCollection<E, C, S> {
 
         OfCollectionImpl(BuildStrategy<C> buildStrategy, Supplier<C> c) {
-            super(buildStrategy,c,ChildStrategy.DEFAULT);
+            super(buildStrategy, c, ChildStrategy.DEFAULT);
         }
 
         @Override
@@ -210,11 +269,11 @@ public class Cotterpin {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static class OfMapImpl<K, V, M extends Map<K, V>, S extends OfMapImpl<K, V, M, S>> extends BlueprintLikeImpl<M,S>
-            implements Blueprint.OfMap<K, V, M, S> {
+    private static class OfMapImpl<K, V, M extends Map<K, V>, S extends OfMapImpl<K, V, M, S>>
+            extends BlueprintLikeImpl<M, S> implements Blueprint.OfMap<K, V, M, S> {
 
         OfMapImpl(BuildStrategy<M> buildStrategy, Supplier<M> m) {
-            super(buildStrategy,m,ChildStrategy.DEFAULT);
+            super(buildStrategy, m, ChildStrategy.DEFAULT);
         }
 
         @Override

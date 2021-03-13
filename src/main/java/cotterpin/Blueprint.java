@@ -31,7 +31,7 @@ import org.apache.commons.lang3.reflect.Typed;
  * @param <T> built type
  * @param <S> self type
  */
-public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T,S> {
+public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T, S> {
 
     /**
      * Root Blueprint type.
@@ -60,7 +60,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
      * @param <S> self type
      */
     public interface OfCollection<E, C extends Collection<E>, S extends OfCollection<E, C, S>>
-            extends BlueprintLike<C,S>, Supplier<C> {
+            extends BlueprintLike<C, S>, Supplier<C> {
 
         /**
          * Obtain a blueprint for a directly-specified element.
@@ -154,7 +154,8 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
      * @param <M> {@link Map} type
      * @param <S> self type
      */
-    public interface OfMap<K, V, M extends Map<K, V>, S extends OfMap<K, V, M, S>> extends BlueprintLike<M,S>, Supplier<M> {
+    public interface OfMap<K, V, M extends Map<K, V>, S extends OfMap<K, V, M, S>>
+            extends BlueprintLike<M, S>, Supplier<M> {
 
         /**
          * Obtain a blueprint for a {@link Map} entry (via its value).
@@ -332,6 +333,79 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
     }
 
     /**
+     * Wildcard child type for simpler {@code null} child values.
+     *
+     * @param <U> parent type
+     * @param <P> parent blueprint type
+     * @param <S> self type
+     */
+    public interface WildChild<U, P extends Blueprint<U, P>, S extends WildChild<U, P, S>> {
+        /**
+         * Add the ({@code null}) value to the parent via the specified {@code mutator}.
+         * 
+         * @param <T>
+         * @param mutator
+         * @return parent blueprint, fluently
+         */
+        <T> P onto(BiConsumer<? super U, ? super T> mutator);
+
+        /**
+         * Equivalent to {@code addTo(coll, ComponentStrategy.noop())}.
+         * 
+         * @param coll     {@link Function}
+         * @return parent blueprint, fluently
+         */
+        default P addTo(Function<? super U, Collection<?>> coll) {
+            return addTo(coll, ComponentStrategy.noop());
+        }
+
+        /**
+         * Add the supplied value to a {@link Collection} property of the parent,
+         * obtained by {@code coll}, using the specified component {@code strategy}.
+         * 
+         * @param coll     {@link Function}
+         * @param strategy to apply
+         * @return parent blueprint, fluently
+         */
+        P addTo(Function<? super U, Collection<?>> coll, ComponentStrategy<U, ? extends Collection<?>> strategy);
+
+        /**
+         * Equivalent to {@code into(map, ComponentStrategy.noop())}.
+         * 
+         * @param <K>      key type
+         * @param <M>      {@link Map} type
+         * @param map      {@link Function}
+         * @return {@link IntoMap} fluent step
+         */
+        default <K, M extends Map<? super K, ?>> IntoMap<K, ?, U, P> into(Function<? super U, M> map) {
+            return into(map, ComponentStrategy.noop());
+        }
+
+        /**
+         * Begin the process of putting the supplied value into a {@link Map} property
+         * of the parent, obtained by {@code map}, using the specified component {@code strategy}.
+         * 
+         * @param <K>      key type
+         * @param <M>      {@link Map} type
+         * @param map      {@link Function}
+         * @param strategy to apply
+         * @return {@link IntoMap} fluent step
+         */
+        <K, M extends Map<? super K, ?>> IntoMap<K, ?, U, P> into(Function<? super U, M> map,
+                ComponentStrategy<U, ? extends M> strategy);
+
+        /**
+         * In conjunction with inherited strategies (where applicable), apply the
+         * specified {@link ChildStrategy} set from this point onward until and unless
+         * this method is called again.
+         * 
+         * @param strategies
+         * @return {@code this}, fluently
+         */
+        S strategy(ChildStrategy... strategies);
+    }
+
+    /**
      * Fluent step for map insertion.
      *
      * @param <K> key type
@@ -462,6 +536,14 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
     default <X, C extends Child<X, T, S, C>> C nul(Class<X> type) {
         return child(() -> null);
     }
+
+    /**
+     * Obtain a "wild child" blueprint-ish object.
+     * 
+     * @param <C> {@link WildChild} type
+     * @return C
+     */
+    <C extends WildChild<T, S, C>> C nul();
 
     /**
      * Obtain a blueprint for a child component of the specified {@code type}.

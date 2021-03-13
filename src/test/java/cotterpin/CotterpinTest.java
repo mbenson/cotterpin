@@ -27,10 +27,12 @@ import java.time.Year;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -40,6 +42,7 @@ import java.util.function.Supplier;
 import org.apache.commons.lang3.reflect.TypeLiteral;
 import org.apache.commons.lang3.tuple.Pair;
 import org.assertj.core.api.Assertions;
+import org.assertj.core.api.MapAssert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -208,6 +211,39 @@ public class CotterpinTest {
         .get().getCharacters()
         // @formatter:on
         ).isNull();
+    }
+
+    @Test
+    public void testWildNullChildSetProperty() {
+        Franchise f =
+        // @formatter:off
+        Cotterpin.build(Mockito.mock(Franchise.class))
+            .nul().onto(Franchise::setName
+        ).get();
+        // @formatter:on
+        Mockito.verify(f).setName(null);
+    }
+
+    @Test
+    public void testWildNullChildAddToCollectionProperty() {
+        assertThat(
+        // @formatter:off
+            Cotterpin.build(Character::new)
+                .nul().addTo(Character::getWeaknesses,ifNull(Character::setWeaknesses, LinkedHashSet::new))
+            .get()
+        // @formatter:on
+                        .getWeaknesses()).hasOnlyOneElementSatisfying(e -> assertThat(e).isNull());
+    }
+
+    @Test
+    public void testWildNullChildPutIntoMapProperty() {
+        assertThat(
+        // @formatter:off
+            Cotterpin.build(Franchise::new)
+                .nul().into(Franchise::getCharacters, ifNull(Franchise::setCharacters, HashMap::new)).at("null")
+            .get()
+        // @formatter:on
+                        .getCharacters()).hasSize(1).hasEntrySatisfying("null", Objects::isNull);
     }
 
     @Test(expected = NullPointerException.class)
