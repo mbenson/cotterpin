@@ -229,7 +229,7 @@ public class CotterpinTest {
                 .nul().addTo(Character::getWeaknesses,ifNull(Character::setWeaknesses, LinkedHashSet::new))
             .get()
         // @formatter:on
-                        .getWeaknesses()).hasOnlyOneElementSatisfying(e -> assertThat(e).isNull());
+        .getWeaknesses()).singleElement().satisfies(e -> assertThat(e).isNull());
     }
 
     @Test
