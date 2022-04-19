@@ -139,8 +139,8 @@ public class Cotterpin {
 
         @Override
         public <N extends WildChild<T, S, N>> N nul() {
-            ChildStrategyManager _children = new ChildStrategyManager(children.current);
-            MutableBoolean open = new MutableBoolean(Boolean.TRUE);
+            final ChildStrategyManager _children = new ChildStrategyManager(children.current);
+            final MutableBoolean open = new MutableBoolean(Boolean.TRUE);
 
             return (N) new WildChild<T, S, N>() {
 
@@ -169,7 +169,7 @@ public class Cotterpin {
                     ensureOpen();
                     try {
                         final Function<T, M> m = strategy.apply((Function) map);
-                        return new IntoMapImpl(() -> null, m, (S) BlueprintImpl.this, children.current);
+                        return new IntoMapImpl(() -> null, m, BlueprintImpl.this, children.current);
                     } finally {
                         close();
                     }
@@ -345,7 +345,7 @@ public class Cotterpin {
             @SuppressWarnings("unchecked")
             final Function<U, C> x = strategy.apply((Function<U, C>) coll);
 
-            BiConsumer<U, T> cmer = children.apply((u, t) -> x.apply(u).add(t));
+            final BiConsumer<U, T> cmer = children.apply((u, t) -> x.apply(u).add(t));
             parent.then(p -> cmer.accept(p, get()));
             return close();
         }
@@ -482,7 +482,7 @@ public class Cotterpin {
     /**
      * Begin to build a {@link Blueprint} (implicit singleton
      * {@link BuildStrategy}).
-     * 
+     *
      * @param <T> built type
      * @param <R> {@link Blueprint.Root} type
      * @param t   value {@link Supplier}
@@ -494,10 +494,10 @@ public class Cotterpin {
 
     /**
      * Begin to build a {@link Blueprint}.
-     * 
+     *
      * @param strategy for build
      * @param t        value {@link Supplier}
-     * 
+     *
      * @param <T>      built type
      * @param <R>      {@link Blueprint.Root} type
      * @return R
@@ -510,7 +510,7 @@ public class Cotterpin {
     /**
      * Begin to build a {@link Blueprint} (implicit singleton
      * {@link BuildStrategy}).
-     * 
+     *
      * @param <T> built type
      * @param <R> {@link Blueprint.Root} type
      * @param t   value
@@ -522,7 +522,7 @@ public class Cotterpin {
 
     /**
      * Shorthand for {@link #build(Supplier)}.
-     * 
+     *
      * @param <T> built type
      * @param <R> {@link Blueprint.Root} type
      * @param t   value {@link Supplier}
@@ -534,22 +534,21 @@ public class Cotterpin {
 
     /**
      * Shorthand for {@link #build(BuildStrategy, Supplier)}.
-     * 
+     *
      * @param strategy for build
      * @param t        value {@link Supplier}
-     * 
+     *
      * @param <T>      built type
      * @param <R>      {@link Blueprint.Root} type
      * @return R
      */
-    @SuppressWarnings("unchecked")
     public static <T, R extends Blueprint.Root<T, R>> R $(BuildStrategy<T> strategy, Supplier<T> t) {
-        return (R) new RootImpl<>(strategy, t);
+        return build(strategy, t);
     }
 
     /**
      * Shorthand for {@link #build(Object)}.
-     * 
+     *
      * @param <T> built type
      * @param <R> {@link Blueprint.Root} type
      * @param t   value
@@ -569,15 +568,14 @@ public class Cotterpin {
      * @param c   value {@link Supplier}
      * @return R
      */
-    @SuppressWarnings("unchecked")
     public static <E, C extends Collection<E>, R extends Blueprint.OfCollection<E, C, R>> R buildCollection(
             Supplier<C> c) {
-        return (R) new OfCollectionImpl<>(singleton(), c);
+        return buildCollection(singleton(), c);
     }
 
     /**
      * Begin to build a (root) {@link Collection} blueprint.
-     * 
+     *
      * @param <E>      element type
      * @param <C>      built type
      * @param <R>      {@link Blueprint.OfCollection} type
@@ -593,21 +591,20 @@ public class Cotterpin {
 
     /**
      * Shorthand for {@link #buildCollection(Supplier)}.
-     * 
+     *
      * @param <E> element type
      * @param <C> built type
      * @param <R> {@link Blueprint.OfCollection} type
      * @param c   value {@link Supplier}
      * @return R
      */
-    @SuppressWarnings("unchecked")
     public static <E, C extends Collection<E>, R extends Blueprint.OfCollection<E, C, R>> R c$(Supplier<C> c) {
-        return (R) new OfCollectionImpl<>(singleton(), c);
+        return buildCollection(singleton(), c);
     }
 
     /**
      * Shorthand for {@link #buildCollection(BuildStrategy, Supplier)}.
-     * 
+     *
      * @param <E>      element type
      * @param <C>      built type
      * @param <R>      {@link Blueprint.OfCollection} type
@@ -615,15 +612,14 @@ public class Cotterpin {
      * @param c        value {@link Supplier}
      * @return R
      */
-    @SuppressWarnings("unchecked")
     public static <E, C extends Collection<E>, R extends Blueprint.OfCollection<E, C, R>> R c$(
             BuildStrategy<C> strategy, Supplier<C> c) {
-        return (R) new OfCollectionImpl<>(strategy, c);
+        return buildCollection(strategy, c);
     }
 
     /**
      * Begin to build a (root) {@link Map} blueprint.
-     * 
+     *
      * @param <K>      key type
      * @param <V>      value type
      * @param <M>      {@link Map} type
@@ -640,7 +636,7 @@ public class Cotterpin {
 
     /**
      * Begin to build a (root) {@link Map} blueprint (implicit singleton strategy).
-     * 
+     *
      * @param <K> key type
      * @param <V> value type
      * @param <M> {@link Map} type
@@ -654,7 +650,7 @@ public class Cotterpin {
 
     /**
      * Shorthand for {@link #buildMap(BuildStrategy, Supplier)}.
-     * 
+     *
      * @param <K>      key type
      * @param <V>      value type
      * @param <M>      {@link Map} type
@@ -663,15 +659,14 @@ public class Cotterpin {
      * @param m        value {@link Supplier}
      * @return R
      */
-    @SuppressWarnings("unchecked")
     public static <K, V, M extends Map<K, V>, R extends Blueprint.OfMap<K, V, M, R>> R m$(BuildStrategy<M> strategy,
             Supplier<M> m) {
-        return (R) new OfMapImpl<>(strategy, m);
+        return buildMap(strategy, m);
     }
 
     /**
      * Shorthand for {@link #buildMap(Supplier)}.
-     * 
+     *
      * @param <K> key type
      * @param <V> value type
      * @param <M> {@link Map} type
