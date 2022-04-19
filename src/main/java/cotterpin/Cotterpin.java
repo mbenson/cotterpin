@@ -562,21 +562,7 @@ public class Cotterpin {
     /**
      * Begin to build a (root) {@link Collection} blueprint (implicit singleton
      * strategy).
-     * 
-     * @param <E> element type
-     * @param <C> built type
-     * @param <R> {@link Blueprint.OfCollection} type
-     * @param c   value
-     * @return R
-     */
-    public static <E, C extends Collection<E>, R extends Blueprint.OfCollection<E, C, R>> R buildCollection(C c) {
-        return buildCollection(singleton(), () -> c);
-    }
-
-    /**
-     * Begin to build a (root) {@link Collection} blueprint (implicit singleton
-     * strategy).
-     * 
+     *
      * @param <E> element type
      * @param <C> built type
      * @param <R> {@link Blueprint.OfCollection} type
@@ -603,19 +589,6 @@ public class Cotterpin {
     public static <E, C extends Collection<E>, R extends Blueprint.OfCollection<E, C, R>> R buildCollection(
             BuildStrategy<C> strategy, Supplier<C> c) {
         return (R) new OfCollectionImpl<>(strategy, c);
-    }
-
-    /**
-     * Shorthand for {@link #buildCollection(Collection)}.
-     * 
-     * @param <E> element type
-     * @param <C> built type
-     * @param <R> {@link Blueprint.OfCollection} type
-     * @param c   value
-     * @return R
-     */
-    public static <E, C extends Collection<E>, R extends Blueprint.OfCollection<E, C, R>> R c$(C c) {
-        return buildCollection(c);
     }
 
     /**
@@ -680,20 +653,6 @@ public class Cotterpin {
     }
 
     /**
-     * Begin to build a (root) {@link Map} blueprint (implicit singleton strategy).
-     * 
-     * @param <K> key type
-     * @param <V> value type
-     * @param <M> {@link Map} type
-     * @param <R> {@link Blueprint.OfMap} type
-     * @param m   value
-     * @return R
-     */
-    public static <K, V, M extends Map<K, V>, R extends Blueprint.OfMap<K, V, M, R>> R buildMap(M m) {
-        return buildMap(singleton(), () -> m);
-    }
-
-    /**
      * Shorthand for {@link #buildMap(BuildStrategy, Supplier)}.
      * 
      * @param <K>      key type
@@ -721,21 +680,7 @@ public class Cotterpin {
      * @return R
      */
     public static <K, V, M extends Map<K, V>, R extends Blueprint.OfMap<K, V, M, R>> R m$(Supplier<M> m) {
-        return buildMap(singleton(), m);
-    }
-
-    /**
-     * Shorthand for {@link #buildMap(Map)}.
-     * 
-     * @param <K> key type
-     * @param <V> value type
-     * @param <M> {@link Map} type
-     * @param <R> {@link Blueprint.OfMap} type
-     * @param m   value
-     * @return R
-     */
-    public static <K, V, M extends Map<K, V>, R extends Blueprint.OfMap<K, V, M, R>> R m$(M m) {
-        return buildMap(singleton(), () -> m);
+        return buildMap(m);
     }
 
     private static <T> IntConsumer bindTo(T t, ObjIntConsumer<T> cmer) {
