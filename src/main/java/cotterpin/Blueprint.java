@@ -43,7 +43,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
         /**
          * Transform this {@link Blueprint}.
-         * 
+         *
          * @param <TT>  new built type
          * @param <SS>  new self type
          * @param xform {@link Function}
@@ -64,7 +64,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
         /**
          * Obtain a blueprint for a directly-specified element.
-         * 
+         *
          * @param <R> {@link OfCollectionElement} type
          * @param e   element
          * @return R
@@ -75,7 +75,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
         /**
          * Obtain a blueprint for a {@link Collection} element.
-         * 
+         *
          * @param <R> {@link OfCollectionElement} type
          * @param e   element {@link Supplier}
          * @return R
@@ -84,7 +84,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
         /**
          * Shorthand for {@link #element(Supplier)}.
-         * 
+         *
          * @param <R> {@link OfCollectionElement} type
          * @param e   element {@link Supplier}
          * @return R
@@ -95,7 +95,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
         /**
          * Shorthand for {@link #element(Object)}
-         * 
+         *
          * @param <R> {@link OfCollectionElement} type
          * @param e   element
          * @return R
@@ -106,7 +106,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
         /**
          * Shorthand syntax for {@code null} {@link #element(Object)}.
-         * 
+         *
          * @param <R>
          * @return R
          */
@@ -118,7 +118,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
          * Transform this {@link Blueprint.OfCollection}. The assumption is that the
          * caller has completed the {@link Collection} stage of the build and now
          * desires a simple root {@link Blueprint}.
-         * 
+         *
          * @param <T>   new built type
          * @param <SS>  new {@link Blueprint.Root} type
          * @param xform {@link Function}
@@ -140,7 +140,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
         /**
          * Add the built element to the hosted {@link Collection}
-         * 
+         *
          * @return parent blueprint, fluently
          */
         P add();
@@ -159,7 +159,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
         /**
          * Obtain a blueprint for a {@link Map} entry (via its value).
-         * 
+         *
          * @param <R> {@link OfMapEntry} type
          * @param v   value {@link Supplier}
          * @return R
@@ -168,7 +168,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
         /**
          * Obtain a blueprint for a {@link Map} entry (via directly-specified value).
-         * 
+         *
          * @param <R>
          * @param v   value
          * @return R
@@ -179,7 +179,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
         /**
          * Shorthand for {@link #value(Supplier)}.
-         * 
+         *
          * @param <R>
          * @param v   value {@link Supplier}
          * @return R
@@ -190,7 +190,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
         /**
          * Shorthand for {@link #value(Object)}.
-         * 
+         *
          * @param <R>
          * @param v   value
          * @return R
@@ -201,7 +201,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
         /**
          * Shorthand syntax for {@code null} {@link #value(Object)}.
-         * 
+         *
          * @param <R>
          * @return R
          */
@@ -213,7 +213,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
          * Transform this {@link Blueprint.OfMap}. The assumption is that the caller has
          * completed the {@link Map} stage of the build and now desires a simple root
          * {@link Blueprint}.
-         * 
+         *
          * @param <T>   new built type
          * @param <SS>  new {@link Blueprint.Root} type
          * @param xform {@link Function}
@@ -237,7 +237,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
         /**
          * Put the built value into the hosted {@link Map} at the key supplied by
          * {@code key}.
-         * 
+         *
          * @param key
          * @return parent blueprint, fluently
          */
@@ -245,13 +245,13 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
         /**
          * Put the built value into the hosted {@link Map} at {@code key}.
-         * 
+         *
          * @param key
          * @return parent blueprint, fluently
          */
         default P at(K key) {
             return at(() -> key);
-        };
+        }
     }
 
     /**
@@ -266,7 +266,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
         /**
          * Apply the supplied value to the parent using the specified {@code mutator}.
-         * 
+         *
          * @param mutator
          * @return parent blueprint, fluently
          */
@@ -275,7 +275,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
         /**
          * Add the supplied value to a {@link Collection} property of the parent,
          * obtained by {@code coll}.
-         * 
+         *
          * @param <C>  {@link Collection} type
          * @param coll {@link Function}
          * @return parent blueprint, fluently
@@ -287,7 +287,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
         /**
          * Add the supplied value to a {@link Collection} property of the parent,
          * obtained by {@code coll}, with component strategy.
-         * 
+         *
          * @param <C>      {@link Collection} type
          * @param coll     {@link Function}
          * @param strategy to apply
@@ -298,7 +298,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
         /**
          * Begin the process of putting the supplied value into a {@link Map} property
          * of the parent, obtained by {@code map}.
-         * 
+         *
          * @param <K> key type
          * @param <M> {@link Map} type
          * @param map {@link Function}
@@ -311,7 +311,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
         /**
          * Begin the process of putting the supplied value into a {@link Map} property
          * of the parent, obtained by {@code map}, with component strategy.
-         * 
+         *
          * @param <K>      key type
          * @param <M>      {@link Map} type
          * @param map      {@link Function}
@@ -323,7 +323,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
         /**
          * Transform this {@link Child}.
-         * 
+         *
          * @param <TT>  new built type
          * @param <SS>  new self type
          * @param xform {@link Function}
@@ -342,7 +342,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
     public interface WildChild<U, P extends Blueprint<U, P>, S extends WildChild<U, P, S>> {
         /**
          * Add the ({@code null}) value to the parent via the specified {@code mutator}.
-         * 
+         *
          * @param <T>
          * @param mutator
          * @return parent blueprint, fluently
@@ -351,7 +351,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
         /**
          * Equivalent to {@code addTo(coll, ComponentStrategy.noop())}.
-         * 
+         *
          * @param coll     {@link Function}
          * @return parent blueprint, fluently
          */
@@ -362,7 +362,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
         /**
          * Add the supplied value to a {@link Collection} property of the parent,
          * obtained by {@code coll}, using the specified component {@code strategy}.
-         * 
+         *
          * @param coll     {@link Function}
          * @param strategy to apply
          * @return parent blueprint, fluently
@@ -371,7 +371,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
         /**
          * Equivalent to {@code into(map, ComponentStrategy.noop())}.
-         * 
+         *
          * @param <K>      key type
          * @param <M>      {@link Map} type
          * @param map      {@link Function}
@@ -384,7 +384,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
         /**
          * Begin the process of putting the supplied value into a {@link Map} property
          * of the parent, obtained by {@code map}, using the specified component {@code strategy}.
-         * 
+         *
          * @param <K>      key type
          * @param <M>      {@link Map} type
          * @param map      {@link Function}
@@ -398,7 +398,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
          * In conjunction with inherited strategies (where applicable), apply the
          * specified {@link ChildStrategy} set from this point onward until and unless
          * this method is called again.
-         * 
+         *
          * @param strategies
          * @return {@code this}, fluently
          */
@@ -417,7 +417,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
         /**
          * Complete the ongoing map insertion using the supplied {@code key}.
-         * 
+         *
          * @param key
          * @return parent blueprint, fluently
          */
@@ -425,7 +425,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
         /**
          * Complete the ongoing map insertion using the specified {@code key}.
-         * 
+         *
          * @param key
          * @return parent blueprint, fluently
          */
@@ -448,7 +448,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
         /**
          * Apply the configured mutations onto the component obtained using
          * {@code accessor}.
-         * 
+         *
          * @param accessor {@link Function}
          * @return parent blueprint
          */
@@ -459,7 +459,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
         /**
          * Apply the configured mutations onto the component obtained using
          * {@code accessor}, with component strategy.
-         * 
+         *
          * @param accessor {@link Function}
          * @param strategy to apply
          * @return parent blueprint
@@ -469,7 +469,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
     /**
      * Obtain a blueprint for a child value.
-     * 
+     *
      * @param <X> value type
      * @param <C> {@link Child} blueprint type
      * @param c   child {@link Supplier}
@@ -479,7 +479,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
     /**
      * Obtain a blueprint for a directly-specified child value.
-     * 
+     *
      * @param <X> value type
      * @param <C> {@link Child} blueprint type
      * @param c   child value
@@ -491,7 +491,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
     /**
      * Shorthand for {@link #child(Supplier)}.
-     * 
+     *
      * @param <X> value type
      * @param <C> {@link Child} blueprint type
      * @param c   child {@link Supplier}
@@ -503,7 +503,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
     /**
      * Shorthand for {@link #child(Object)}.
-     * 
+     *
      * @param <X> value type
      * @param <C> {@link Child} blueprint type
      * @param c   child value
@@ -515,7 +515,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
     /**
      * Obtain a child blueprint with a {@code null} value, avoiding casts.
-     * 
+     *
      * @param <X>  value type
      * @param <C>  {@link Child} blueprint type
      * @param type
@@ -527,7 +527,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
     /**
      * Obtain a child blueprint with a {@code null} value, avoiding casts.
-     * 
+     *
      * @param <X>  value type
      * @param <C>  {@link Child} blueprint type
      * @param type
@@ -539,7 +539,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
     /**
      * Obtain a "wild child" blueprint-ish object.
-     * 
+     *
      * @param <C> {@link WildChild} type
      * @return C
      */
@@ -547,7 +547,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
     /**
      * Obtain a blueprint for a child component of the specified {@code type}.
-     * 
+     *
      * @param <X>  component type
      * @param <M>  fully parameterized {@link Mutator} type
      * @param type
@@ -557,7 +557,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
     /**
      * Obtain a blueprint for a child component of the specified {@code type}.
-     * 
+     *
      * @param <X>  component type
      * @param <M>  fully parameterized {@link Mutator} type
      * @param type
@@ -569,7 +569,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
     /**
      * Shorthand for {@link #mutate(Typed)}.
-     * 
+     *
      * @param <X>  component type
      * @param <M>  fully parameterized {@link Mutator} type
      * @param type
@@ -581,7 +581,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
     /**
      * Shorthand for {@link #mutate(Class)}.
-     * 
+     *
      * @param <X>  component type
      * @param <M>  fully parameterized {@link Mutator} type
      * @param type
@@ -593,7 +593,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
 
     /**
      * Add a step to the blueprint plan.
-     * 
+     *
      * @param mutation which will be applied
      * @return {@code this}, fluently
      */
@@ -603,7 +603,7 @@ public interface Blueprint<T, S extends Blueprint<T, S>> extends BlueprintLike<T
      * In conjunction with inherited strategies (where applicable), apply the
      * specified {@link ChildStrategy} set from this point onward until and unless
      * this method is called again.
-     * 
+     *
      * @param strategies
      * @return {@code this}, fluently
      */
