@@ -226,7 +226,7 @@ public class CotterpinTest {
         assertThat(
         // @formatter:off
             Cotterpin.build(Character::new)
-                .nul().addTo(Character::getWeaknesses,ifNull(Character::setWeaknesses, LinkedHashSet::new))
+                .nul().addTo(Character::getWeaknesses, ifNull(Character::setWeaknesses, LinkedHashSet::new))
             .get()
         // @formatter:on
         .getWeaknesses()).singleElement().satisfies(e -> assertThat(e).isNull());

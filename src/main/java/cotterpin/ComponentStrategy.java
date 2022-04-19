@@ -32,7 +32,7 @@ import java.util.stream.Stream;
 public interface ComponentStrategy<P, T> extends UnaryOperator<Function<P, T>> {
     /**
      * Create a {@code noop} {@link ComponentStrategy}.
-     * 
+     *
      * @param <P>
      * @param <T>
      * @return {@link ComponentStrategy}
@@ -43,7 +43,7 @@ public interface ComponentStrategy<P, T> extends UnaryOperator<Function<P, T>> {
 
     /**
      * Create a {@link ComponentStrategy} to initialize a missing component.
-     * 
+     *
      * @param <P>    parent type
      * @param <T>    child type
      * @param store {@link BiConsumer} to record onto a parent the child object
@@ -52,7 +52,7 @@ public interface ComponentStrategy<P, T> extends UnaryOperator<Function<P, T>> {
      * @return {@link IfNull}
      */
     public static <P, T> ComponentStrategy<P, T> ifNull(BiConsumer<? super P, ? super T> store, Supplier<T> create) {
-        return new IfNull<P, T>(store, create);
+        return new IfNull<>(store, create);
     }
 
     /**
@@ -71,7 +71,7 @@ public interface ComponentStrategy<P, T> extends UnaryOperator<Function<P, T>> {
 
     /**
      * Chain {@code s} to {@code this}.
-     * 
+     *
      * @param s
      * @return {@link ComponentStrategy}
      */
@@ -81,7 +81,7 @@ public interface ComponentStrategy<P, T> extends UnaryOperator<Function<P, T>> {
 
     /**
      * Chain {@code this} to {@code s}.
-     * 
+     *
      * @param s
      * @return {@link ComponentStrategy}
      */
